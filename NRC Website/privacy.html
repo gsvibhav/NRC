@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy | Next Reach Culture</title>
+  <meta name="description" content="How Next Reach Culture (NRC) collects, uses and protects information submitted through the Brand Audit form at nrculture.com." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://nrculture.com/privacy.html" />
+
+  <link rel="icon" type="image/jpeg" href="assets/nrc-logo-founder.jpeg" />
+  <link rel="apple-touch-icon" href="assets/nrc-logo-founder.jpeg" />
+  <meta name="theme-color" content="#1A1714" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --champagne:       #B89780;
+      --champagne-light: #CCAF98;
+      --champagne-dark:  #8A7060;
+      --champagne-dim:   rgba(184,151,128,0.13);
+
+      --sage:            #7D8C72;
+      --sage-light:      #96A78B;
+      --sage-dim:        rgba(125,140,114,0.16);
+
+      --ivory:           #F5F0E8;
+      --ivory-dark:      #EDE7DB;
+
+      --charcoal:        #2A2420;
+      --charcoal-muted:  rgba(42,36,32,0.66);
+
+      --bronze:          #A08268;
+
+      --dark:            #1A1714;
+      --dark2:           #211E1B;
+
+      --bone:            #EDE5D8;
+      --cream:           #F8F3EC;
+
+      --text:            #EDE5D8;
+      --text-muted:      rgba(237,229,216,0.52);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { transition: none !important; }
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--ivory);
+      color: var(--charcoal);
+    }
+
+    a { color: inherit; }
+
+    /* ── PAGE HEADER ──
+       A simple static header for this standalone page -- deliberately not
+       the fixed/scrolled Liquid Glass nav used on the home page. */
+    .privacy-header {
+      border-bottom: 1px solid rgba(160,130,104,0.18);
+      padding: 22px 64px;
+    }
+
+    .privacy-header-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .privacy-logo-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      line-height: 0;
+    }
+
+    .privacy-logo-link img {
+      height: 44px;
+      width: auto;
+      display: block;
+    }
+
+    .privacy-back-link {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--charcoal-muted);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .privacy-back-link:hover,
+    .privacy-back-link:focus-visible {
+      color: var(--charcoal);
+    }
+
+    /* ── CONTENT ── */
+    .privacy-main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 80px 32px 100px;
+    }
+
+    .privacy-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.1;
+      color: var(--charcoal);
+      margin-bottom: 16px;
+    }
+
+    .privacy-updated {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 56px;
+    }
+
+    .privacy-section {
+      padding-top: 40px;
+      margin-top: 40px;
+      border-top: 1px solid rgba(160,130,104,0.16);
+    }
+
+    .privacy-section:first-of-type {
+      padding-top: 0;
+      margin-top: 0;
+      border-top: none;
+    }
+
+    .privacy-section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 26px;
+      color: var(--charcoal);
+      margin-bottom: 18px;
+    }
+
+    .privacy-section p {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--charcoal-muted);
+      max-width: 640px;
+    }
+
+    .privacy-section p + p {
+      margin-top: 18px;
+    }
+
+    .privacy-section ul {
+      margin-top: 8px;
+      padding-left: 22px;
+    }
+
+    .privacy-section li {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--charcoal-muted);
+      max-width: 620px;
+    }
+
+    .privacy-section a {
+      color: var(--champagne-dark);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .privacy-section a:hover,
+    .privacy-section a:focus-visible {
+      color: var(--charcoal);
+    }
+
+    /* ── CLOSING SECTION ── */
+    .privacy-footer {
+      background: var(--dark);
+      border-top: 1px solid rgba(160,130,104,0.18);
+      padding: 56px 32px;
+    }
+
+    .privacy-footer-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .privacy-footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 22px;
+      color: var(--bone);
+      margin-bottom: 14px;
+    }
+
+    .privacy-footer p {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.85;
+      color: var(--text-muted);
+    }
+
+    .privacy-footer a {
+      color: var(--champagne-light);
+      text-decoration: none;
+    }
+
+    .privacy-footer a:hover,
+    .privacy-footer a:focus-visible {
+      color: var(--bone);
+    }
+
+    @media (max-width: 600px) {
+      .privacy-header { padding: 18px 24px; }
+      .privacy-main { padding: 56px 24px 72px; }
+      .privacy-footer { padding: 44px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="privacy-header">
+    <div class="privacy-header-inner">
+      <a class="privacy-logo-link" href="index.html" aria-label="Next Reach Culture home">
+        <img src="assets/nrc-logo-header.png" alt="Next Reach Culture" />
+      </a>
+      <a class="privacy-back-link" href="index.html">Back to Site</a>
+    </div>
+  </header>
+
+  <main class="privacy-main">
+    <h1 class="privacy-title">Privacy Policy</h1>
+    <p class="privacy-updated">Last updated: July 18, 2026</p>
+
+    <section class="privacy-section">
+      <h2>1. Introduction</h2>
+      <p>This Privacy Policy explains how Next Reach Culture ("NRC," "we," "us," or "our") handles personal information submitted through our website, <a href="https://nrculture.com/">https://nrculture.com/</a>. It applies to visitors who use the Brand Audit / contact form on this site.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>2. Information We Collect</h2>
+      <p>When you voluntarily submit the Brand Audit form on this website, we may collect the following information you choose to provide:</p>
+      <ul>
+        <li>Your name</li>
+        <li>Your email address</li>
+        <li>Your brand or company name</li>
+        <li>Your website or Instagram profile, if provided</li>
+        <li>The service you are interested in, if selected</li>
+        <li>Details about your project or brief</li>
+      </ul>
+      <p>We do not automatically collect any additional personal information beyond what you choose to enter into this form.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>3. How We Use Your Information</h2>
+      <p>Information submitted through the form may be used to:</p>
+      <ul>
+        <li>Respond to your inquiry</li>
+        <li>Understand your project requirements</li>
+        <li>Discuss NRC's services with you</li>
+        <li>Follow up regarding potential or ongoing work</li>
+        <li>Maintain necessary business records related to our communications</li>
+      </ul>
+    </section>
+
+    <section class="privacy-section">
+      <h2>4. Form Processing and Third Parties</h2>
+      <p>Submissions made through the Brand Audit form on this website are sent to and processed using a Google Apps Script endpoint, which forwards form data for our review. This means Google's infrastructure is involved in receiving and processing the information you submit. We encourage you to review Google's own privacy documentation if you would like more information about how Google handles data passing through its services.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>5. Cookies and Analytics</h2>
+      <p>This website does not intentionally use analytics, advertising, or non-essential tracking cookies. We have not integrated any analytics platforms, advertising pixels, or similar tracking tools into this site.</p>
+      <p>Loading external resources such as Google Fonts, used for the typography on this site, may cause your browser to send standard technical request information (such as your IP address and browser type) to the third party serving that resource, as is typical for any website that loads fonts from an external source. This occurs independently of any additional action by NRC.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>6. Data Retention</h2>
+      <p>We retain submitted information only for as long as reasonably necessary to respond to inquiries, manage potential or active client relationships, and meet applicable business or legal obligations.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>7. Data Sharing</h2>
+      <p>NRC does not sell personal information. Information you submit may be shared only with service providers necessary to operate the inquiry process described in Section 4, or where required by law.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>8. Security</h2>
+      <p>We take reasonable steps to help protect the information submitted to us. However, no method of transmission over the internet, and no method of electronic storage, can be guaranteed to be completely secure. We cannot guarantee the absolute security of information you submit to us.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>9. Your Choices and Contact</h2>
+      <p>If you would like to access, correct, or request deletion of information you have submitted to us, please contact us at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>. We will respond to reasonable requests consistent with applicable requirements.</p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>10. Policy Updates</h2>
+      <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page.</p>
+      <p>Last updated: July 18, 2026</p>
+    </section>
+  </main>
+
+  <footer class="privacy-footer">
+    <div class="privacy-footer-inner">
+      <p class="privacy-footer-name">Next Reach Culture</p>
+      <p>Questions about this policy? Email <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>.</p>
+      <p><a href="index.html">← Back to nrculture.com</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>

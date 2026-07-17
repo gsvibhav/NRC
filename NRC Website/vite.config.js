@@ -6,6 +6,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         fbxPreview: 'fbx-preview.html',
+        privacy: 'privacy.html',
       },
     },
   },

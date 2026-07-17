@@ -3,7 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Next Reach Culture</title>
+  <!-- Progressive-enhancement gate for the mobile nav menu (P2.1): adds .js as
+       early as possible so the always-open no-JS fallback panel never flashes
+       visible before collapsing once the end-of-body script runs. -->
+  <script>document.documentElement.classList.add('js');</script>
+  <title>Next Reach Culture | Brand Strategy, Content & Design Studio</title>
+  <meta name="description" content="NRC is a brand growth studio helping ambitious businesses align strategy, content, design and advertising so their brand is remembered, trusted and chosen." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://nrculture.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Next Reach Culture" />
+  <meta property="og:title" content="Next Reach Culture | Brand Strategy, Content & Design Studio" />
+  <meta property="og:description" content="We help ambitious brands align strategy, content, design and advertising so they are remembered, trusted and chosen." />
+  <meta property="og:url" content="https://nrculture.com/" />
+  <!-- NOTE: no purpose-built 1200x630 social share image exists yet -- reusing the square founder/brand
+       mark (assets/nrc-logo-founder.jpeg, 1772x1772) as the best available fallback. See report for the
+       recommended dedicated asset spec. -->
+  <meta property="og:image" content="assets/nrc-logo-founder.jpeg" />
+  <meta property="og:image:width" content="1772" />
+  <meta property="og:image:height" content="1772" />
+  <meta property="og:image:alt" content="Next Reach Culture logo mark" />
+
+  <!-- X / Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Next Reach Culture | Brand Strategy, Content & Design Studio" />
+  <meta name="twitter:description" content="We help ambitious brands align strategy, content, design and advertising so they are remembered, trusted and chosen." />
+  <meta name="twitter:image" content="assets/nrc-logo-founder.jpeg" />
+  <meta name="twitter:image:alt" content="Next Reach Culture logo mark" />
+
+  <!-- Favicon / touch icon -->
+  <!-- NOTE: no dedicated multi-resolution favicon set exists (16x16/32x32/180x180 PNGs). Reusing the
+       square founder/brand mark as the closest available square asset; the logo mark will appear small
+       within surrounding whitespace at 16-32px sizes. See report for the recommended dedicated asset spec. -->
+  <link rel="icon" type="image/jpeg" href="assets/nrc-logo-founder.jpeg" />
+  <link rel="apple-touch-icon" href="assets/nrc-logo-founder.jpeg" />
+  <meta name="theme-color" content="#1A1714" />
+
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +65,7 @@
 
       /* CHARCOAL — warm dark typography */
       --charcoal:       #2A2420;   /* primary text — warm dark */
-      --charcoal-muted: rgba(42,36,32,0.52); /* secondary text */
+      --charcoal-muted: rgba(42,36,32,0.66); /* secondary text — 0.66 to meet WCAG AA 4.5:1 on ivory/ivory-dark */
 
       /* BRONZE — soft metallic for arrows, accents */
       --bronze:         #A08268;   /* bronze — tertiary accent */
@@ -44,7 +81,7 @@
 
       /* TEXT TOKENS */
       --text:           #EDE5D8;   /* main text on dark bg */
-      --text-muted:     rgba(237,229,216,0.5); /* muted text on dark */
+      --text-muted:     rgba(237,229,216,0.52); /* muted text on dark — 0.52 to meet WCAG AA 4.5:1 on --dark */
 
       /* LEGACY ALIASES — so existing var(--gold*) references resolve to new palette
          without touching every consumer rule individually */
@@ -53,6 +90,18 @@
       --gold-dark:      var(--champagne-dark);
       --gold-dim:       var(--champagne-dim);
       --slate:          var(--sage);
+
+      /* ── LIQUID GLASS — NAVIGATION (Phase 2, prototype-approved) ──
+         Scoped to the nav bar only. Opacity is 0.80 rather than the
+         Phase-1 prototype's 0.62: the prototype demo was only checked
+         against one bounded ivory frame, while this fixed nav scrolls
+         over every section (light and dark). 0.80 keeps the existing
+         nav-link/CTA text at >=4.5:1 contrast even over the lightest
+         section. */
+      --glass-blur:          22px;
+      --glass-tint-dark:     rgba(26,23,20,0.80);
+      --glass-border:        rgba(184,151,128,0.22);
+      --glass-fallback-dark: rgba(19,17,15,0.97);
     }
 
     html { scroll-behavior: smooth; }
@@ -75,14 +124,46 @@
       padding: 22px 64px;
       background: transparent;
       border-bottom: 1px solid transparent;
-      transition: background 0.6s ease, border-color 0.6s ease;
+      transition: background 0.6s ease, border-color 0.6s ease, backdrop-filter 0.6s ease;
     }
 
     nav.scrolled {
-      background: rgba(13,13,13,0.92);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-bottom-color: rgba(184,151,128,0.1);
+      background: var(--glass-tint-dark);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+      border-bottom-color: var(--glass-border);
+    }
+
+    /* Solid fallback where backdrop-filter isn't supported */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      nav.scrolled {
+        background: var(--glass-fallback-dark);
+      }
+    }
+
+    /* OS-level "Reduce Transparency" accessibility setting */
+    @media (prefers-reduced-transparency: reduce) {
+      nav.scrolled {
+        background: var(--glass-fallback-dark);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    /* High-contrast / forced-colors mode: solid system colors, visible edge */
+    @media (forced-colors: active) {
+      nav.scrolled {
+        background: Canvas;
+        border-bottom: 1px solid CanvasText;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      nav {
+        transition: none;
+      }
     }
 
     .nav-wordmark {
@@ -123,7 +204,7 @@
       font-weight: 500;
       letter-spacing: 2.5px;
       text-transform: uppercase;
-      color: rgba(42,36,32,0.52);
+      color: var(--charcoal-muted);
       text-decoration: none;
       transition: color 0.3s;
       position: relative;
@@ -149,7 +230,7 @@
       width: 100%;
     }
 
-    nav.scrolled .nav-links a       { color: rgba(237,229,216,0.45); }
+    nav.scrolled .nav-links a       { color: rgba(237,229,216,0.68); } /* 0.68: WCAG AA 4.5:1 against the actual composited glass background (0.45 measured 2.94–3.84:1) */
     nav.scrolled .nav-links a:hover { color: var(--bone); }
 
     .nav-cta {
@@ -173,20 +254,217 @@
       border-color: var(--gold-light);
     }
 
+    /* ── MOBILE NAV MENU (P2.1, Option A: editorial text toggle) ──
+       Trigger hidden by default; the mobile media query below both reveals
+       it and reflows the nav grid to 3 columns (wordmark / trigger / cta)
+       plus a second row for the panel. Follows the exact same color logic
+       already used by .nav-links a -- no new color system. */
+    .nav-menu-trigger {
+      display: none;
+      background: none;
+      border: none;
+      padding: 10px 6px;
+      cursor: pointer;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--charcoal-muted);
+      transition: color 0.3s;
+    }
+
+    .nav-menu-trigger:hover,
+    .nav-menu-trigger[aria-expanded="true"] {
+      color: var(--charcoal);
+    }
+
+    nav.scrolled .nav-menu-trigger { color: rgba(237,229,216,0.68); }
+    nav.scrolled .nav-menu-trigger:hover,
+    nav.scrolled .nav-menu-trigger[aria-expanded="true"] { color: var(--bone); }
+
+    /* Solid background (not glass) so the panel stays legible regardless of
+       whatever section sits behind the fixed nav -- no new backdrop-filter,
+       existing tokens only. */
+    .mobile-nav-panel {
+      display: none;
+    }
+
     @media (max-width: 768px) {
       nav {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr auto auto;
         padding: 16px 24px;
       }
+
+      .nav-wordmark { grid-column: 1; grid-row: 1; }
+
       .nav-links {
         display: none;
       }
+
       .nav-wordmark img {
         height: 44px;
       }
+
+      .nav-menu-trigger {
+        display: inline-flex;
+        align-items: center;
+        grid-column: 2;
+        grid-row: 1;
+      }
+
       .nav-cta {
+        grid-column: 3;
+        grid-row: 1;
         padding: 10px 18px;
         font-size: 9px;
+      }
+
+      .mobile-nav-panel {
+        display: block;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-height: none; /* no-JS fallback: always expanded, links always reachable */
+        overflow: hidden;
+        background: var(--ivory);
+        border-top: 1px solid rgba(160,130,104,0.16);
+      }
+
+      nav.scrolled .mobile-nav-panel {
+        background: var(--glass-fallback-dark);
+        border-top-color: rgba(138,112,96,.35);
+      }
+
+      html.js .mobile-nav-panel {
+        max-height: 0;
+        opacity: 0;
+        visibility: hidden;
+        transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1),
+                    opacity 0.25s ease,
+                    visibility 0s linear 0.35s;
+      }
+
+      html.js .mobile-nav-panel.open {
+        max-height: 220px;
+        opacity: 1;
+        visibility: visible;
+        transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1),
+                    opacity 0.3s ease 0.05s,
+                    visibility 0s linear 0s;
+      }
+
+      .mobile-nav-panel ul { list-style: none; }
+      .mobile-nav-panel li { border-top: 1px solid rgba(160,130,104,0.14); }
+      .mobile-nav-panel li:first-child { border-top: none; }
+      nav.scrolled .mobile-nav-panel li { border-top-color: rgba(138,112,96,.35); }
+
+      .mobile-nav-panel a {
+        display: block;
+        padding: 15px 4px;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 19px;
+        font-weight: 300;
+        color: var(--charcoal);
+        text-decoration: none;
+      }
+
+      nav.scrolled .mobile-nav-panel a { color: var(--bone); }
+
+      .mobile-nav-panel a:focus-visible {
+        outline: 2px solid var(--champagne-dark);
+        outline-offset: -2px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html.js .mobile-nav-panel,
+      html.js .mobile-nav-panel.open {
+        transition: none;
+      }
+    }
+
+    /* ── MOBILE FLOATING CTA (Phase 3) ──
+       Reuses the Phase-2 glass tokens (--glass-blur, --glass-tint-dark,
+       --glass-border, --glass-fallback-dark). Mobile-only: hidden entirely
+       above 768px. No hover sheen — this is a touch-only element. */
+    .mobile-cta {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        z-index: 90;
+        font-family: 'Inter', 'Montserrat', sans-serif;
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--bone);
+        text-decoration: none;
+        padding: 12px 20px;
+        border: 1px solid var(--glass-border);
+        border-radius: 2px; /* near-sharp — not a circular/pill FAB */
+        background: var(--glass-tint-dark);
+        backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1),
+                    transform 0.4s cubic-bezier(0.16,1,0.3,1),
+                    visibility 0s linear 0.4s;
+      }
+
+      .mobile-cta.mobile-cta-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+        transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1),
+                    transform 0.4s cubic-bezier(0.16,1,0.3,1),
+                    visibility 0s linear 0s;
+      }
+    }
+
+    /* Solid fallback where backdrop-filter isn't supported */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .mobile-cta {
+        background: var(--glass-fallback-dark);
+      }
+    }
+
+    /* OS-level "Reduce Transparency" accessibility setting */
+    @media (prefers-reduced-transparency: reduce) {
+      .mobile-cta {
+        background: var(--glass-fallback-dark);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    /* High-contrast / forced-colors mode: solid system colors, visible edge */
+    @media (forced-colors: active) {
+      .mobile-cta {
+        background: Canvas;
+        color: CanvasText;
+        border: 1px solid CanvasText;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mobile-cta,
+      .mobile-cta.mobile-cta-visible {
+        transition: opacity 0.15s linear;
+        transform: none;
       }
     }
 
@@ -441,7 +719,7 @@
       font-size: 10px;
       font-weight: 400;
       letter-spacing: 1.5px;
-      color: rgba(42,36,32,0.38);
+      color: var(--charcoal-muted);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -622,7 +900,7 @@
       font-weight: 500;
       letter-spacing: 3.5px;
       text-transform: uppercase;
-      color: rgba(42,36,32,0.54);
+      color: var(--charcoal-muted);
     }
 
     .founder-caption {
@@ -636,7 +914,7 @@
       font-size: 11px;
       font-weight: 300;
       line-height: 1.9;
-      color: rgba(42,36,32,0.62);
+      color: var(--charcoal-muted);
     }
 
     .founder-content {
@@ -679,7 +957,7 @@
       font-size: 14px;
       font-weight: 300;
       line-height: 2.05;
-      color: rgba(42,36,32,0.58);
+      color: var(--charcoal-muted);
       max-width: 610px;
     }
 
@@ -734,7 +1012,7 @@
       font-weight: 600;
       letter-spacing: 3px;
       text-transform: uppercase;
-      color: rgba(42,36,32,0.42);
+      color: var(--charcoal-muted);
       margin-bottom: 2px;
     }
 
@@ -743,7 +1021,7 @@
       font-size: 20px;
       font-weight: 300;
       letter-spacing: 0.5px;
-      color: rgba(42,36,32,0.62);
+      color: var(--charcoal-muted);
     }
 
     .founder-client::after {
@@ -883,7 +1161,7 @@
       font-size: 15px;
       font-weight: 300;
       line-height: 1.95;
-      color: rgba(42,36,32,0.50);
+      color: var(--charcoal-muted);
       padding-bottom: 8px;
     }
 
@@ -952,7 +1230,7 @@
       font-weight: 600;
       letter-spacing: 3px;
       text-transform: uppercase;
-      color: rgba(42,36,32,0.35);
+      color: var(--charcoal-muted);
       margin-bottom: 14px;
       padding-top: 6px;
     }
@@ -982,7 +1260,7 @@
       font-size: 14px;
       font-weight: 300;
       line-height: 2.0;
-      color: rgba(42,36,32,0.56);
+      color: var(--charcoal-muted);
       max-width: 380px;
       margin-top: 0;
       padding-top: 5px;
@@ -1125,7 +1403,7 @@
       font-size: 15px;
       font-weight: 300;
       line-height: 1.95;
-      color: rgba(42,36,32,0.52);
+      color: var(--charcoal-muted);
       padding-bottom: 8px;
     }
 
@@ -1206,7 +1484,7 @@
       font-size: 14px;
       font-weight: 300;
       line-height: 1.95;
-      color: rgba(42,36,32,0.54);
+      color: var(--charcoal-muted);
       max-width: 250px;
     }
 
@@ -1417,7 +1695,7 @@
       font-family: 'Inter', 'Montserrat', sans-serif;
       font-size: 11px;
       font-weight: 300;
-      color: rgba(237,229,216,0.38);
+      color: var(--text-muted);
       margin-top: 3px;
       font-style: normal;
     }
@@ -1526,6 +1804,30 @@
     #brand-audit .audit-field textarea:focus {
       background: var(--dark);
       border-color: var(--champagne-light);
+    }
+
+    /* Invalid field state -- border only; the paired text below is the
+       primary signal so meaning is never conveyed by color alone. */
+    #brand-audit .audit-field.audit-field-invalid input,
+    #brand-audit .audit-field.audit-field-invalid select,
+    #brand-audit .audit-field.audit-field-invalid textarea {
+      border-color: var(--champagne-dark);
+    }
+
+    #brand-audit .audit-field-error {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--champagne-light);
+    }
+
+    #brand-audit .audit-form-status {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--champagne-light);
     }
 
     #brand-audit .audit-submit.btn-primary {
@@ -1643,7 +1945,23 @@
       font-weight: 400;
       letter-spacing: 1.8px;
       text-transform: uppercase;
-      color: rgba(237,229,216,0.38);
+      color: var(--text-muted);
+    }
+
+    .footer-legal-link {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-legal-link:hover,
+    .footer-legal-link:focus-visible {
+      color: var(--champagne-light);
     }
 
     @media (max-width: 900px) {
@@ -1718,7 +2036,7 @@
       font-size: 15px;
       font-weight: 300;
       line-height: 1.85;
-      color: rgba(42,36,32,0.54);
+      color: var(--charcoal-muted);
       max-width: 560px;
     }
 
@@ -1898,7 +2216,7 @@
       font-size: 17px;
       font-weight: 300;
       line-height: 1.95;
-      color: rgba(42,36,32,0.58);
+      color: var(--charcoal-muted);
       max-width: 620px;
     }
 
@@ -2077,6 +2395,11 @@
       max-width: 380px;
     }
 
+    .audit-success-body a {
+      color: var(--champagne-light);
+      text-decoration: none;
+    }
+
     .audit-error-msg {
       display: none;
       margin-top: 18px;
@@ -2084,7 +2407,7 @@
       font-size: 12px;
       font-weight: 300;
       line-height: 1.75;
-      color: rgba(237,229,216,0.46);
+      color: var(--text-muted);
     }
 
     .audit-error-msg a {
@@ -2105,7 +2428,7 @@
       font-size: 11px;
       font-weight: 400;
       letter-spacing: 1.5px;
-      color: rgba(237,229,216,0.48);
+      color: var(--text-muted);
       line-height: 1.75;
     }
 
@@ -2117,6 +2440,60 @@
 
     .footer-whatsapp a:hover {
       color: var(--champagne-light);
+    }
+
+    /* ── SITE-WIDE REDUCED MOTION (consolidated) ──
+       Existing nav (line ~159) and mobile-cta (line ~347) reduced-motion
+       rules are untouched and preserved as-is. This block covers every
+       other decorative entrance/ambient animation and scroll-reveal
+       effect in the file. Placed last so it wins the cascade against the
+       base rules above without needing !important. */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+
+      /* Hero character: drop the entrance slide-in and the infinite
+         breathing loop, but keep the per-breakpoint opacity it would
+         have settled into. */
+      .hero-character {
+        animation: none;
+        opacity: var(--character-opacity, 1);
+      }
+      .hero-char-video {
+        animation: none;
+      }
+
+      /* Hero eyebrow/headline/sub/buttons/scarcity: these are revealed by
+         a JS setTimeout + classList.add('in') stagger, not CSS alone, so
+         both the base (pre-JS) and .in (post-JS) states are overridden
+         here -- content is visible immediately either way. */
+      .hero-eyebrow, .hero-eyebrow.in,
+      .hero-sub, .hero-sub.in,
+      .hero-btns, .hero-btns.in,
+      .hero-scarcity, .hero-scarcity.in,
+      .hero-headline .line-inner,
+      .hero-headline .line-inner.in {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+
+      /* Scarcity pulse dot: infinite ambient loop, stop it. */
+      .scarcity-dot {
+        animation: none;
+      }
+
+      /* Scroll-triggered section reveals: content stays visible even if
+         the IntersectionObserver never adds the -in class. */
+      .founder-reveal,
+      .work-reveal,
+      .method-reveal,
+      .audit-reveal,
+      .wtif-reveal,
+      .svc-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
     }
   </style>
 </head>
@@ -2132,8 +2509,19 @@
       <li><a href="#about">Founders</a></li>
       <li><a href="#process">Approach</a></li>
     </ul>
+    <button type="button" class="nav-menu-trigger" id="nav-menu-trigger" aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Toggle navigation menu">Menu</button>
+    <div class="mobile-nav-panel" id="mobile-nav-panel">
+      <ul>
+        <li><a href="#portfolio">Work</a></li>
+        <li><a href="#about">Founders</a></li>
+        <li><a href="#process">Approach</a></li>
+      </ul>
+    </div>
     <a href="#contact" class="nav-cta">Book a Call</a>
   </nav>
+
+  <!-- MOBILE FLOATING CTA (Phase 3) — same destination/behavior as .nav-cta -->
+  <a href="#contact" id="mobile-book-call" class="mobile-cta">Book a Call</a>
 
   <!-- HERO -->
   <section id="hero">
@@ -2539,7 +2927,8 @@
           <div class="audit-form-row">
             <div class="audit-field">
               <label for="audit-first">First Name</label>
-              <input id="audit-first" name="first_name" type="text" autocomplete="given-name" />
+              <input id="audit-first" name="first_name" type="text" autocomplete="given-name" required aria-describedby="audit-first-error" />
+              <p class="audit-field-error" id="audit-first-error" hidden>Enter your first name.</p>
             </div>
             <div class="audit-field">
               <label for="audit-last">Last Name</label>
@@ -2549,17 +2938,20 @@
 
           <div class="audit-field">
             <label for="audit-email">Email Address</label>
-            <input id="audit-email" name="email" type="email" autocomplete="email" />
+            <input id="audit-email" name="email" type="email" autocomplete="email" required aria-describedby="audit-email-error" />
+            <p class="audit-field-error" id="audit-email-error" hidden>Enter a valid email address.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-brand">Brand / Company</label>
-            <input id="audit-brand" name="brand" type="text" autocomplete="organization" />
+            <input id="audit-brand" name="brand" type="text" autocomplete="organization" required aria-describedby="audit-brand-error" />
+            <p class="audit-field-error" id="audit-brand-error" hidden>Enter your brand or company name.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-web">Website or Instagram</label>
-            <input id="audit-web" name="website" type="text" inputmode="url" />
+            <input id="audit-web" name="website" type="text" inputmode="url" aria-describedby="audit-web-error" />
+            <p class="audit-field-error" id="audit-web-error" hidden>Enter a valid website or Instagram handle.</p>
           </div>
 
           <div class="audit-field">
@@ -2577,18 +2969,21 @@
 
           <div class="audit-field">
             <label for="audit-brief">Tell us about your brand</label>
-            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?"></textarea>
+            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?" required minlength="15" aria-describedby="audit-brief-error"></textarea>
+            <p class="audit-field-error" id="audit-brief-error" hidden>Tell us briefly what you need help with.</p>
           </div>
 
+          <p class="audit-form-status" id="audit-form-status" aria-live="polite" hidden></p>
+
           <button type="submit" class="btn-primary audit-submit">Book a Discovery Call</button>
-          <p class="audit-error-msg" id="audit-error-msg">
-            Something went wrong. Please email us at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>
+          <p class="audit-error-msg" id="audit-error-msg" tabindex="-1" aria-live="assertive">
+            Your request could not be sent. Please try again, or contact us directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
           </p>
         </form>
 
         <div class="audit-success" id="audit-success" aria-live="polite">
-          <p class="audit-success-title">We'll be in touch.</p>
-          <p class="audit-success-body">Thank you for reaching out. We review every submission and will respond within 48 hours.</p>
+          <p class="audit-success-title">Your request was sent.</p>
+          <p class="audit-success-body">We could not independently confirm delivery. If you do not hear from us within a couple of days, please reach out directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
         </div>
       </div>
 
@@ -2611,6 +3006,7 @@
 
       <div class="footer-bottom">
         <p class="footer-copy">© 2025 Next Reach Culture · Built with intention.</p>
+        <a class="footer-legal-link" href="privacy.html">Privacy Policy</a>
       </div>
     </div>
   </footer>
@@ -2723,27 +3119,36 @@
       window.addEventListener('resize', resize);
 
       // ── ANIMATION ── minimal, calm
+      // Reduced-motion: one MediaQueryList built once (not per-frame), read
+      // as a cached boolean each frame -- freezes the decorative drift
+      // (camera parallax, particles, rings, glow) while still rendering
+      // the scene every frame. A 'change' listener picks up the user
+      // toggling the OS setting mid-session.
       let t = 0;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       function animate() {
         requestAnimationFrame(animate);
-        t += 0.002;
 
-        // Very gentle camera drift — won't compete with the character.
-        camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.012;
-        camera.position.y += (-mouse.y * 0.3 - camera.position.y) * 0.012;
-        camera.lookAt(0, 0, 0);
+        if (!reduceMotion.matches) {
+          t += 0.002;
 
-        // Slow atmospheric drift.
-        particles.rotation.y = t * 0.007;
-        particles.rotation.x = t * 0.003;
+          // Very gentle camera drift — won't compete with the character.
+          camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.012;
+          camera.position.y += (-mouse.y * 0.3 - camera.position.y) * 0.012;
+          camera.lookAt(0, 0, 0);
 
-        ringGroup.rotation.z = -0.08 + Math.sin(t * 0.38) * 0.006;
-        ringA.material.opacity = 0.09 + Math.sin(t * 0.48) * 0.012;
-        ringB.material.opacity = 0.06 + Math.sin(t * 0.36 + 1.2) * 0.008;
-        ringC.material.opacity = 0.046 + Math.sin(t * 0.32 + 2.4) * 0.006;
+          // Slow atmospheric drift.
+          particles.rotation.y = t * 0.007;
+          particles.rotation.x = t * 0.003;
 
-        // Warm glow breathes with the character — subtle sync.
-        warmGlow.intensity = 0.34 + Math.sin(t * 0.5) * 0.045;
+          ringGroup.rotation.z = -0.08 + Math.sin(t * 0.38) * 0.006;
+          ringA.material.opacity = 0.09 + Math.sin(t * 0.48) * 0.012;
+          ringB.material.opacity = 0.06 + Math.sin(t * 0.36 + 1.2) * 0.008;
+          ringC.material.opacity = 0.046 + Math.sin(t * 0.32 + 2.4) * 0.006;
+
+          // Warm glow breathes with the character — subtle sync.
+          warmGlow.intensity = 0.34 + Math.sin(t * 0.5) * 0.045;
+        }
 
         renderer.render(scene, camera);
       }
@@ -2836,6 +3241,98 @@
     })();
 
     // ────────────────────────────────────────────────
+    // MOBILE NAV MENU (P2.1, Option A) — editorial text toggle
+    // ────────────────────────────────────────────────
+    (function () {
+      var MOBILE_BREAKPOINT = 768;
+      var nav     = document.getElementById('main-nav');
+      var trigger = document.getElementById('nav-menu-trigger');
+      var panel   = document.getElementById('mobile-nav-panel');
+      if (!nav || !trigger || !panel) return;
+
+      function isOpen() { return trigger.getAttribute('aria-expanded') === 'true'; }
+
+      function openMenu() {
+        if (isOpen()) return;
+        panel.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        trigger.textContent = 'Close';
+      }
+
+      function closeMenu(returnFocus) {
+        if (!isOpen()) return;
+        panel.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.textContent = 'Menu';
+        if (returnFocus) trigger.focus();
+      }
+
+      trigger.addEventListener('click', function () {
+        if (isOpen()) closeMenu(false); else openMenu();
+      });
+
+      panel.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { closeMenu(false); });
+      });
+
+      var wordmark = nav.querySelector('.nav-wordmark');
+      var cta = nav.querySelector('.nav-cta');
+      [wordmark, cta].forEach(function (el) {
+        if (el) el.addEventListener('click', function () { closeMenu(false); });
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isOpen()) closeMenu(true);
+      });
+
+      document.addEventListener('click', function (e) {
+        if (isOpen() && !panel.contains(e.target) && !trigger.contains(e.target)) {
+          closeMenu(false);
+        }
+      }, true);
+
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > MOBILE_BREAKPOINT && isOpen()) closeMenu(false);
+      });
+    })();
+
+    // ────────────────────────────────────────────────
+    // MOBILE FLOATING CTA — visibility state (Phase 3)
+    // Visible once #hero has fully left the viewport, hidden again while
+    // #hero is back in view OR while #brand-audit / footer are near, so it
+    // never overlaps the contact form or footer content.
+    // ────────────────────────────────────────────────
+    (function() {
+      const cta = document.getElementById('mobile-book-call');
+      const hero = document.getElementById('hero');
+      if (!cta || !hero) return;
+
+      let pastHero = false;
+      const hiddenNear = new Set();
+
+      function sync() {
+        cta.classList.toggle('mobile-cta-visible', pastHero && hiddenNear.size === 0);
+      }
+
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) { pastHero = !entry.isIntersecting; });
+        sync();
+      }, { threshold: 0 }).observe(hero);
+
+      [document.getElementById('brand-audit'), document.querySelector('footer')]
+        .filter(Boolean)
+        .forEach(function (zone) {
+          new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) hiddenNear.add(zone);
+              else hiddenNear.delete(zone);
+            });
+            sync();
+          }, { threshold: 0, rootMargin: '0px 0px -15% 0px' }).observe(zone);
+        });
+    })();
+
+    // ────────────────────────────────────────────────
     // HERO ENTRANCE ANIMATION
     // Staggered reveals: eyebrow → headline lines → sub → btns → scarcity
     // ────────────────────────────────────────────────
@@ -2913,8 +3410,89 @@
       var form    = document.getElementById('audit-contact-form');
       var success = document.getElementById('audit-success');
       var errMsg  = document.getElementById('audit-error-msg');
+      var statusEl = document.getElementById('audit-form-status');
       if (!form) return;
       var btn = form.querySelector('.audit-submit');
+
+      // ── VALIDATION ──
+      // novalidate stays on the <form> so the browser's native popups never
+      // fire; this custom logic fully replaces native validation and owns
+      // all messaging, timing and focus behavior.
+      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // "Website or Instagram": accepts a URL with/without protocol OR a
+      // bare/@-prefixed handle. Only rejects input that is clearly not a
+      // single token (contains whitespace) or has no alphanumeric content.
+      var WEBSITE_RE = /^\S+$/;
+      var BRIEF_MIN_LENGTH = 15; // filters empty/junk submissions ("hi", ".") without penalizing a genuinely short real brief
+
+      function toggleField(input, valid) {
+        var group = input.closest('.audit-field');
+        var errorId = input.getAttribute('aria-describedby');
+        var errorEl = errorId ? document.getElementById(errorId) : null;
+        if (valid) {
+          input.removeAttribute('aria-invalid');
+          if (group) group.classList.remove('audit-field-invalid');
+          if (errorEl) errorEl.hidden = true;
+        } else {
+          input.setAttribute('aria-invalid', 'true');
+          if (group) group.classList.add('audit-field-invalid');
+          if (errorEl) errorEl.hidden = false;
+        }
+        return valid;
+      }
+
+      function validateFirstName() {
+        var el = document.getElementById('audit-first');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
+      function validateEmail() {
+        var el = document.getElementById('audit-email');
+        var val = el.value.trim();
+        return toggleField(el, val.length > 0 && EMAIL_RE.test(val));
+      }
+
+      function validateBrand() {
+        var el = document.getElementById('audit-brand');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
+      function validateWebsite() {
+        var el = document.getElementById('audit-web');
+        var val = el.value.trim();
+        if (!val) return toggleField(el, true); // optional -- empty is valid
+        return toggleField(el, WEBSITE_RE.test(val) && /[a-z0-9]/i.test(val));
+      }
+
+      function validateBrief() {
+        var el = document.getElementById('audit-brief');
+        return toggleField(el, el.value.trim().length >= BRIEF_MIN_LENGTH);
+      }
+
+      var validators = {
+        'audit-first': validateFirstName,
+        'audit-email': validateEmail,
+        'audit-brand': validateBrand,
+        'audit-web':   validateWebsite,
+        'audit-brief': validateBrief
+      };
+      // Visual/DOM order, used to find the first invalid field to focus.
+      var fieldOrder = ['audit-first', 'audit-email', 'audit-brand', 'audit-web', 'audit-brief'];
+
+      // Only start live re-validation (clearing errors as the visitor
+      // corrects a field) after the first failed submit attempt -- errors
+      // are never shown before the visitor has tried to submit.
+      var liveValidationAttached = false;
+      function attachLiveValidation() {
+        if (liveValidationAttached) return;
+        liveValidationAttached = true;
+        fieldOrder.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.addEventListener('input', function () { validators[id](); });
+        });
+      }
+
+      var submitting = false;
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -2924,10 +3502,31 @@
           return;
         }
 
-        // Basic required-field check
-        var email = form.querySelector('[name="email"]');
-        if (email && !email.value.trim()) { email.focus(); return; }
+        if (submitting) return; // ignore repeated submits while one is in flight
 
+        var firstOk = validateFirstName();
+        var emailOk = validateEmail();
+        var brandOk = validateBrand();
+        var webOk   = validateWebsite();
+        var briefOk = validateBrief();
+
+        attachLiveValidation();
+
+        if (!(firstOk && emailOk && brandOk && webOk && briefOk)) {
+          if (statusEl) {
+            statusEl.textContent = 'Please fix the highlighted fields before submitting.';
+            statusEl.hidden = false;
+          }
+          for (var i = 0; i < fieldOrder.length; i++) {
+            var el = document.getElementById(fieldOrder[i]);
+            if (el && el.getAttribute('aria-invalid') === 'true') { el.focus(); break; }
+          }
+          return;
+        }
+
+        if (statusEl) { statusEl.hidden = true; statusEl.textContent = ''; }
+
+        submitting = true;
         var originalLabel = btn.textContent;
         btn.textContent   = 'Sending…';
         btn.disabled      = true;
@@ -2936,16 +3535,47 @@
         var body = new URLSearchParams(new FormData(form));
         body.append('submitted_at', new Date().toISOString());
 
-        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: body })
+        // Apps Script cold starts can take several seconds; 15s is long
+        // enough to avoid a false timeout on a normal slow request, short
+        // enough that a genuinely broken request doesn't leave the visitor
+        // waiting indefinitely on a disabled button.
+        var REQUEST_TIMEOUT_MS = 15000;
+        var supportsAbort = typeof AbortController !== 'undefined';
+        var controller = supportsAbort ? new AbortController() : null;
+        var timeoutId = controller ? setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
+
+        function showRecoverableError(isTimeout) {
+          if (!errMsg) return;
+          var lead = isTimeout
+            ? 'This is taking longer than expected and may not have gone through.'
+            : 'Your request could not be sent.';
+          errMsg.innerHTML = lead + ' Please try again, or contact us directly at ' +
+            '<a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or ' +
+            '<a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.';
+          errMsg.style.display = 'block';
+          errMsg.focus();
+        }
+
+        var fetchOptions = { method: 'POST', mode: 'no-cors', body: body };
+        if (controller) fetchOptions.signal = controller.signal;
+
+        fetch(SCRIPT_URL, fetchOptions)
           .then(function () {
-            // mode:no-cors returns an opaque response — network resolve = submitted
+            // mode:no-cors returns an opaque response -- a resolved fetch
+            // means the request was dispatched, but delivery still cannot
+            // be independently confirmed. This is the best available
+            // signal without a server-side change (see report).
+            if (timeoutId) clearTimeout(timeoutId);
             form.style.display = 'none';
             if (success) success.style.display = 'block';
+            submitting = false;
           })
-          .catch(function () {
+          .catch(function (err) {
+            if (timeoutId) clearTimeout(timeoutId);
             btn.textContent = originalLabel;
             btn.disabled    = false;
-            if (errMsg) errMsg.style.display = 'block';
+            showRecoverableError(!!(err && err.name === 'AbortError'));
+            submitting = false;
           });
       });
     })();
