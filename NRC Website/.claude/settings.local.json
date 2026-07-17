@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(identify assets/E8BCCFF8-D0EC-4E7C-A888-FC6CC0DFB4A2_1_105_c.jpeg)",
+      "Bash(sips -g pixelWidth -g pixelHeight assets/E8BCCFF8-D0EC-4E7C-A888-FC6CC0DFB4A2_1_105_c.jpeg)",
+      "Bash(magick --version)",
+      "Bash(convert --version)",
+      "Bash(python3 -c \"from PIL import Image; print\\('Pillow OK'\\)\")",
+      "Bash(python3 -c \"import cv2; print\\('cv2 OK'\\)\")",
+      "Bash(python3 -c \"import wand; print\\('wand OK'\\)\")",
+      "Read(//opt/homebrew/**)",
+      "Bash(pip3 install *)",
+      "Bash(ls /tmp/*.png /tmp/*.jpg /tmp/*.webp 2>/dev/null | head -10; ls ~/Downloads/*.png ~/Downloads/*.jpg 2>/dev/null | grep -i nrc | head -5; find /var/folders -name \"*.png\" -newer assets/nrc-logo-header.png 2>/dev/null | head -10)",
+      "Bash(cp \"/var/folders/lq/6y_vggyj2rzgytjmbrjl04ym0000gn/T/com.apple.Photos.NSItemProvider/version=1&uuid=3F3D7AE5-E5A0-4C79-9D35-396D46BCE06A&mode=compatible&noloc=0.png\" /tmp/nrc-logo-supplied.png)",
+      "Bash(python3 -)",
+      "Bash(SRC=\"/var/folders/lq/6y_vggyj2rzgytjmbrjl04ym0000gn/T/com.apple.Photos.NSItemProvider/version=1&uuid=3F3D7AE5-E5A0-4C79-9D35-396D46BCE06A&mode=compatible&noloc=0.png/NRC New Logo.png\" *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
+    ]
+  }
+}
