@@ -76,6 +76,34 @@ jobs:
             echo "value=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Diagnostic only -- added after a run failed with
+      # "Error: Timeout (control socket)" from the FTP-Deploy-Action step
+      # below. That error means the runner's very first raw TCP connection
+      # attempt to the FTP server got no response at all -- before login,
+      # before any FTPS/TLS negotiation. That's consistent with either (a)
+      # GoDaddy's firewall/WAF silently dropping connections from GitHub's
+      # shared, constantly-rotating runner IP ranges, or (b) a wrong
+      # hostname/port in GODADDY_FTP_SERVER. This step isolates which, by
+      # attempting a bare TCP connect with its own short timeout and a
+      # DNS lookup, independent of the FTP library. It never fails the
+      # job (continue-on-error) and never touches the deploy directory --
+      # remove it once the root cause is confirmed and fixed.
+      - name: Diagnose FTP connectivity (no login attempted)
+        continue-on-error: true
+        env:
+          FTP_HOST: ${{ secrets.GODADDY_FTP_SERVER }}
+        run: |
+          echo "Resolving $FTP_HOST ..."
+          getent hosts "$FTP_HOST" || echo "::warning::DNS lookup failed or returned nothing -- check the GODADDY_FTP_SERVER secret value against exactly what cPanel's FTP Accounts page shows."
+
+          echo ""
+          echo "Attempting raw TCP connect to $FTP_HOST:21 (8s timeout, no credentials sent) ..."
+          if timeout 8 bash -c "exec 3<>/dev/tcp/$FTP_HOST/21 && echo CONNECTED && exec 3<&-"; then
+            echo "==> Port 21 is reachable from this runner. The earlier failure is more likely FTPS/TLS negotiation, an account-side issue, or intermittent -- not a firewall drop."
+          else
+            echo "::warning::Could not open a TCP connection to $FTP_HOST:21 within 8s. This points to the connection being blocked or silently dropped (most likely GoDaddy's firewall/WAF rejecting GitHub Actions' runner IP range), not a credentials or FTPS/TLS problem. Ask GoDaddy support whether FTP access for this account is restricted by source IP, since GitHub Actions IPs are shared and rotate constantly and can't be permanently allow-listed."
+          fi
+
       - name: Deploy to GoDaddy (FTPS)
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
