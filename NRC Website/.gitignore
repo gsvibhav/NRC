@@ -3,3 +3,6 @@ dist
 .DS_Store
 backups
 prototypes
+.env
+.env.local
+.env.*.local

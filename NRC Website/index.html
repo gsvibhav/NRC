@@ -1747,6 +1747,16 @@
       gap: 9px;
     }
 
+    /* Honeypot: off-screen rather than display:none/visibility:hidden,
+       which some spam bots specifically detect and skip. */
+    #brand-audit .audit-field-hp {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+
     #brand-audit .audit-field label {
       font-family: 'Inter', 'Montserrat', sans-serif;
       font-size: 9px;
@@ -2951,31 +2961,32 @@
             </div>
             <div class="audit-field">
               <label for="audit-last">Last Name</label>
-              <input id="audit-last" name="last_name" type="text" autocomplete="family-name" />
+              <input id="audit-last" name="last_name" type="text" autocomplete="family-name" required maxlength="100" aria-describedby="audit-last-error" />
+              <p class="audit-field-error" id="audit-last-error" hidden>Enter your last name.</p>
             </div>
           </div>
 
           <div class="audit-field">
             <label for="audit-email">Email Address</label>
-            <input id="audit-email" name="email" type="email" autocomplete="email" required aria-describedby="audit-email-error" />
+            <input id="audit-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="audit-email-error" />
             <p class="audit-field-error" id="audit-email-error" hidden>Enter a valid email address.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-brand">Brand / Company</label>
-            <input id="audit-brand" name="brand" type="text" autocomplete="organization" required aria-describedby="audit-brand-error" />
+            <input id="audit-brand" name="brand" type="text" autocomplete="organization" required maxlength="150" aria-describedby="audit-brand-error" />
             <p class="audit-field-error" id="audit-brand-error" hidden>Enter your brand or company name.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-web">Website or Instagram</label>
-            <input id="audit-web" name="website" type="text" inputmode="url" aria-describedby="audit-web-error" />
+            <input id="audit-web" name="website" type="text" inputmode="url" maxlength="200" aria-describedby="audit-web-error" />
             <p class="audit-field-error" id="audit-web-error" hidden>Enter a valid website or Instagram handle.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-service">Service Interested In</label>
-            <select id="audit-service" name="service">
+            <select id="audit-service" name="service" required aria-describedby="audit-service-error">
               <option value="" disabled selected></option>
               <option>Brand Strategy</option>
               <option>Brand Identity</option>
@@ -2984,25 +2995,34 @@
               <option>Growth &amp; Performance</option>
               <option>Full Brand Package</option>
             </select>
+            <p class="audit-field-error" id="audit-service-error" hidden>Select a service you're interested in.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-brief">Tell us about your brand</label>
-            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?" required minlength="15" aria-describedby="audit-brief-error"></textarea>
+            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?" required minlength="15" maxlength="4000" aria-describedby="audit-brief-error"></textarea>
             <p class="audit-field-error" id="audit-brief-error" hidden>Tell us briefly what you need help with.</p>
+          </div>
+
+          <!-- Honeypot: hidden from real visitors, left blank by them; a
+               filled value means the submission came from a bot. Not
+               display:none (some bots specifically skip those). -->
+          <div class="audit-field-hp" aria-hidden="true">
+            <label for="audit-hp">Company Website</label>
+            <input id="audit-hp" name="company_website" type="text" tabindex="-1" autocomplete="off" />
           </div>
 
           <p class="audit-form-status" id="audit-form-status" aria-live="polite" hidden></p>
 
           <button type="submit" class="btn-primary audit-submit">Book a Discovery Call</button>
           <p class="audit-error-msg" id="audit-error-msg" tabindex="-1" aria-live="assertive">
-            Your request could not be sent. Please try again, or contact us directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
+            We couldn't submit your request right now. Please try again in a moment or contact us directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>.
           </p>
         </form>
 
         <div class="audit-success" id="audit-success" aria-live="polite">
-          <p class="audit-success-title">Your request was sent.</p>
-          <p class="audit-success-body">We could not independently confirm delivery. If you do not hear from us within a couple of days, please reach out directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
+          <p class="audit-success-title">Thank you for reaching out to NRC.</p>
+          <p class="audit-success-body">We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.</p>
         </div>
       </div>
 
@@ -3419,15 +3439,20 @@
     })();
 
     // ────────────────────────────────────────────────
-    // CONTACT FORM → GOOGLE SHEETS
-    // 1. Deploy your Apps Script (see setup instructions).
-    // 2. Paste the deployed web app URL into SCRIPT_URL below.
+    // CONTACT FORM → GOOGLE APPS SCRIPT (sheet + dual email)
+    // Endpoint comes from VITE_DISCOVERY_FORM_ENDPOINT (see .env.example).
+    // Vite bundles this inline module script and replaces import.meta.env.*
+    // with the real build-time value -- confirmed empirically before this
+    // was written (see report for the test).
     // ────────────────────────────────────────────────
     (function () {
-      var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNCRgS4oLCViqwPmQhmprU9r_qolE2ADycLAPAOHk1UhV2pcyIy6Mh-pcK9o6LItI/exec';
+      var SCRIPT_URL = (typeof import.meta !== 'undefined' && import.meta.env)
+        ? import.meta.env.VITE_DISCOVERY_FORM_ENDPOINT
+        : '';
 
       var form    = document.getElementById('audit-contact-form');
       var success = document.getElementById('audit-success');
+      var successBodyEl = document.querySelector('.audit-success-body');
       var errMsg  = document.getElementById('audit-error-msg');
       var statusEl = document.getElementById('audit-form-status');
       if (!form) return;
@@ -3436,7 +3461,9 @@
       // ── VALIDATION ──
       // novalidate stays on the <form> so the browser's native popups never
       // fire; this custom logic fully replaces native validation and owns
-      // all messaging, timing and focus behavior.
+      // all messaging, timing and focus behavior. The Apps Script backend
+      // re-validates and sanitizes every value independently -- this is
+      // a UX layer, not the source of truth.
       var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       // "Website or Instagram": accepts a URL with/without protocol OR a
       // bare/@-prefixed handle. Only rejects input that is clearly not a
@@ -3465,6 +3492,11 @@
         return toggleField(el, el.value.trim().length > 0);
       }
 
+      function validateLastName() {
+        var el = document.getElementById('audit-last');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
       function validateEmail() {
         var el = document.getElementById('audit-email');
         var val = el.value.trim();
@@ -3483,20 +3515,27 @@
         return toggleField(el, WEBSITE_RE.test(val) && /[a-z0-9]/i.test(val));
       }
 
+      function validateService() {
+        var el = document.getElementById('audit-service');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
       function validateBrief() {
         var el = document.getElementById('audit-brief');
         return toggleField(el, el.value.trim().length >= BRIEF_MIN_LENGTH);
       }
 
       var validators = {
-        'audit-first': validateFirstName,
-        'audit-email': validateEmail,
-        'audit-brand': validateBrand,
-        'audit-web':   validateWebsite,
-        'audit-brief': validateBrief
+        'audit-first':   validateFirstName,
+        'audit-last':    validateLastName,
+        'audit-email':   validateEmail,
+        'audit-brand':   validateBrand,
+        'audit-web':     validateWebsite,
+        'audit-service': validateService,
+        'audit-brief':   validateBrief
       };
       // Visual/DOM order, used to find the first invalid field to focus.
-      var fieldOrder = ['audit-first', 'audit-email', 'audit-brand', 'audit-web', 'audit-brief'];
+      var fieldOrder = ['audit-first', 'audit-last', 'audit-email', 'audit-brand', 'audit-web', 'audit-service', 'audit-brief'];
 
       // Only start live re-validation (clearing errors as the visitor
       // corrects a field) after the first failed submit attempt -- errors
@@ -3507,31 +3546,42 @@
         liveValidationAttached = true;
         fieldOrder.forEach(function (id) {
           var el = document.getElementById(id);
-          if (el) el.addEventListener('input', function () { validators[id](); });
+          if (el) el.addEventListener((el.tagName === 'SELECT' ? 'change' : 'input'), function () { validators[id](); });
         });
       }
 
       var submitting = false;
 
+      function showRecoverableError() {
+        if (!errMsg) return;
+        errMsg.innerHTML = "We couldn't submit your request right now. Please try again in a moment or contact us directly at " +
+          '<a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>.';
+        errMsg.style.display = 'block';
+        errMsg.focus();
+      }
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') {
-          console.warn('NRC: paste your Google Apps Script URL into SCRIPT_URL in index.html');
+        if (!SCRIPT_URL) {
+          console.error('NRC: VITE_DISCOVERY_FORM_ENDPOINT is not configured -- see .env.example');
+          showRecoverableError();
           return;
         }
 
         if (submitting) return; // ignore repeated submits while one is in flight
 
-        var firstOk = validateFirstName();
-        var emailOk = validateEmail();
-        var brandOk = validateBrand();
-        var webOk   = validateWebsite();
-        var briefOk = validateBrief();
+        var firstOk   = validateFirstName();
+        var lastOk    = validateLastName();
+        var emailOk   = validateEmail();
+        var brandOk   = validateBrand();
+        var webOk     = validateWebsite();
+        var serviceOk = validateService();
+        var briefOk   = validateBrief();
 
         attachLiveValidation();
 
-        if (!(firstOk && emailOk && brandOk && webOk && briefOk)) {
+        if (!(firstOk && lastOk && emailOk && brandOk && webOk && serviceOk && briefOk)) {
           if (statusEl) {
             statusEl.textContent = 'Please fix the highlighted fields before submitting.';
             statusEl.hidden = false;
@@ -3547,12 +3597,32 @@
 
         submitting = true;
         var originalLabel = btn.textContent;
-        btn.textContent   = 'Sending…';
+        btn.textContent   = 'Submitting…';
         btn.disabled      = true;
         if (errMsg) errMsg.style.display = 'none';
 
-        var body = new URLSearchParams(new FormData(form));
-        body.append('submitted_at', new Date().toISOString());
+        var formData = new FormData(form);
+        var payload = {
+          first_name: formData.get('first_name') || '',
+          last_name:  formData.get('last_name') || '',
+          email:      formData.get('email') || '',
+          brand:      formData.get('brand') || '',
+          website:    formData.get('website') || '',
+          service:    formData.get('service') || '',
+          brief:      formData.get('brief') || '',
+          company_website: formData.get('company_website') || '' // honeypot
+        };
+
+        function resetSubmitState() {
+          submitting = false;
+        }
+
+        function handleFailure() {
+          btn.textContent = originalLabel;
+          btn.disabled    = false;
+          showRecoverableError();
+          resetSubmitState();
+        }
 
         // Apps Script cold starts can take several seconds; 15s is long
         // enough to avoid a false timeout on a normal slow request, short
@@ -3563,38 +3633,60 @@
         var controller = supportsAbort ? new AbortController() : null;
         var timeoutId = controller ? setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
 
-        function showRecoverableError(isTimeout) {
-          if (!errMsg) return;
-          var lead = isTimeout
-            ? 'This is taking longer than expected and may not have gone through.'
-            : 'Your request could not be sent.';
-          errMsg.innerHTML = lead + ' Please try again, or contact us directly at ' +
-            '<a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or ' +
-            '<a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.';
-          errMsg.style.display = 'block';
-          errMsg.focus();
-        }
-
-        var fetchOptions = { method: 'POST', mode: 'no-cors', body: body };
+        // Content-Type text/plain keeps this a CORS "simple request" so
+        // Apps Script's response comes back readable (not opaque) --
+        // verified directly against the deployed endpoint before this was
+        // written (see report). application/json here would trigger a
+        // preflight OPTIONS request that Apps Script does not handle.
+        var fetchOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        };
         if (controller) fetchOptions.signal = controller.signal;
 
         fetch(SCRIPT_URL, fetchOptions)
-          .then(function () {
-            // mode:no-cors returns an opaque response -- a resolved fetch
-            // means the request was dispatched, but delivery still cannot
-            // be independently confirmed. This is the best available
-            // signal without a server-side change (see report).
+          .then(function (res) {
             if (timeoutId) clearTimeout(timeoutId);
-            form.style.display = 'none';
-            if (success) success.style.display = 'block';
-            submitting = false;
+            return res.text().then(function (text) {
+              var result;
+              try { result = JSON.parse(text); } catch (parseErr) { result = null; }
+
+              // sheetSaved is the only pass/fail gate -- the lead record
+              // is the primary outcome, so a saved record is never
+              // reported as a failure to the visitor. But the wording
+              // shown *within* that success state must stay honest about
+              // whether the confirmation email actually went out.
+              if (result && result.sheetSaved) {
+                if (successBodyEl) {
+                  if (result.customerEmailSent) {
+                    // Customer email sent -- internal-notification status
+                    // doesn't change what the visitor sees, only console
+                    // visibility for us (below).
+                    successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.";
+                  } else if (result.internalEmailSent) {
+                    successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. We were unable to send the confirmation email, but your request has been recorded successfully.";
+                  } else {
+                    successBodyEl.textContent = 'Your discovery call request has been recorded successfully, and our team will get back to you within 48 hours. We were unable to send the confirmation email at this time.';
+                  }
+                }
+
+                if (!result.internalEmailSent) {
+                  console.error('NRC: internal notification email failed to send.' + (result.internalEmailError ? ' ' + result.internalEmailError : ''));
+                }
+
+                form.reset();
+                form.style.display = 'none';
+                if (success) success.style.display = 'block';
+                resetSubmitState();
+              } else {
+                handleFailure();
+              }
+            });
           })
-          .catch(function (err) {
+          .catch(function () {
             if (timeoutId) clearTimeout(timeoutId);
-            btn.textContent = originalLabel;
-            btn.disabled    = false;
-            showRecoverableError(!!(err && err.name === 'AbortError'));
-            submitting = false;
+            handleFailure();
           });
       });
     })();
