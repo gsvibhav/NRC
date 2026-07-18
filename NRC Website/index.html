@@ -1160,112 +1160,6 @@
       padding-bottom: 8px;
     }
 
-    /* Editorial row list — no cards, no boxes */
-    .work-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Each client row */
-    .work-card {
-      display: grid;
-      grid-template-columns: 56px minmax(0, 1.2fr) minmax(120px, 0.55fr) minmax(0, 1.3fr);
-      gap: 0 52px;
-      align-items: start;
-      padding: 48px 0;
-      border-top: 1px solid rgba(160,130,104,0.14);
-      position: relative;
-    }
-
-    .work-card:last-child {
-      border-bottom: 1px solid rgba(160,130,104,0.14);
-    }
-
-    /* Remove the old 5th-card hack — not needed in row layout */
-    .work-card:nth-child(5) {
-      grid-column: auto;
-      max-width: none;
-    }
-
-    /* Remove old pseudo decorations */
-    .work-card::before,
-    .work-card::after {
-      display: none;
-    }
-
-    /* Index number */
-    .work-index {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.28em;
-      color: rgba(125,140,114,0.70);
-      padding-top: 6px;
-    }
-
-    /* Client name column */
-    .work-client-wrap {
-      min-height: 0;
-      display: flex;
-      align-items: flex-start;
-    }
-
-    .work-client {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(34px, 3.8vw, 56px);
-      font-weight: 300;
-      line-height: 0.96;
-      color: var(--charcoal);
-    }
-
-    /* Category column */
-    .work-type-label {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 8.5px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--charcoal-muted);
-      margin-bottom: 14px;
-      padding-top: 6px;
-    }
-
-    .work-type {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 0;
-    }
-
-    .work-chip {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(125,140,114,0.80);
-      /* No border — plain text for editorial feel */
-      border: none;
-      padding: 0;
-    }
-
-    /* Description column */
-    .work-description {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 2.0;
-      color: var(--charcoal-muted);
-      max-width: 380px;
-      margin-top: 0;
-      padding-top: 5px;
-    }
-
-    /* Card head wrapper — retains structure compatibility */
-    .work-card-head {
-      display: contents;
-    }
-
     .work-reveal {
       opacity: 0;
       transform: translateY(18px);
@@ -1280,6 +1174,355 @@
       transform: translateY(0);
     }
 
+    /* ── SELECTED WORK — constellation (Phase 4, prototype-approved) ──
+       Tiered radial field + fixed editorial detail panel. Client data is
+       authored in .work-data-list (the no-JS fallback); the module in
+       src/portfolio-constellation.js enhances it. */
+
+    /* No-JS fallback list: plain editorial rows. Hidden once JS runs. */
+    html.js .work-data-list { display: none; }
+    .work-data-list {
+      list-style: none;
+    }
+    .work-data-list > li {
+      padding: 40px 0;
+      border-top: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-data-list > li:last-child {
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-data-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 38px;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--charcoal);
+    }
+    .work-data-category {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(125,140,114,0.80);
+      margin-top: 12px;
+    }
+    .work-data-description {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 2.0;
+      color: var(--charcoal-muted);
+      max-width: 520px;
+      margin-top: 14px;
+    }
+
+    html:not(.js) .work-app { display: none; }
+
+    .work-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+      gap: 64px;
+      align-items: start;
+    }
+    .layout-tablet .work-stage,
+    .layout-mobile .work-stage {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .work-field {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 620 / 560;
+      overflow: hidden; /* bounded: nothing escapes the field */
+    }
+    .layout-tablet .work-field {
+      aspect-ratio: 640 / 480;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Hairline orbital guides — same quiet ring motif as the hero */
+    .work-orbit {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(160,130,104,0.14);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .work-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--charcoal);
+      text-align: center;
+      padding: 6px 10px; /* enlarges the hit area beyond the glyphs */
+      line-height: 1.05;
+      max-width: 200px;
+      transition: opacity 0.45s ease, color 0.45s ease;
+    }
+    .work-node .nm { display: inline-block; }
+    .work-node .nm::after { /* selection hairline */
+      content: '';
+      display: block;
+      height: 1px;
+      background: var(--champagne);
+      margin-top: 6px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    .work-node[aria-pressed="true"] .nm::after { transform: scaleX(1); }
+
+    .work-node.tier-featured .nm {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(26px, 2.4vw, 36px);
+      font-weight: 300;
+    }
+    .work-node.tier-standard .nm {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(18px, 1.6vw, 23px);
+      font-weight: 300;
+    }
+    /* Compact tier: dormant until the roster needs a third scale.
+       12px (not smaller) so compact clients read as clients. */
+    .work-node.tier-compact .nm {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #5D6A54; /* deepened sage — 5.0:1 on ivory */
+    }
+
+    .work-field.has-active .work-node { opacity: 0.42; }
+    .work-field.has-active .work-node:hover,
+    .work-field.has-active .work-node:focus-visible,
+    .work-field.has-active .work-node[aria-pressed="true"] { opacity: 1; }
+
+    .work-node:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 3px;
+    }
+
+    /* Settle-in: one-shot entrance from near-center; hands off to drift. */
+    .work-field .work-node {
+      opacity: 0;
+      transform: translate(-50%, -50%) translate(var(--inx, 0px), var(--iny, 0px));
+    }
+    .work-field.measuring .work-node {
+      /* Layout measurement must see base geometry only. */
+      opacity: 1 !important;
+      transform: translate(-50%, -50%) !important;
+      transition: none !important;
+      animation: none !important;
+    }
+    .work-field.settled .work-node {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      transition:
+        opacity 0.9s cubic-bezier(0.16,1,0.3,1),
+        transform 0.9s cubic-bezier(0.16,1,0.3,1),
+        color 0.45s ease;
+      transition-delay: var(--settle-delay, 0ms), var(--settle-delay, 0ms), 0ms;
+    }
+    .work-field.settled.settle-done .work-node {
+      transition:
+        opacity 0.45s ease,
+        transform 0.9s cubic-bezier(0.16,1,0.3,1),
+        color 0.45s ease;
+      transition-delay: 0ms;
+    }
+    /* Grouped orbital motion (Phase 5): a single JS rAF loop advances one
+       angle per tier group and writes only these two custom properties
+       per node per frame -- transform-only, no layout thrash. Freezing
+       the loop freezes the transform exactly in place (no snap). */
+    .work-field.settled.orbiting .work-node {
+      transform: translate(-50%, -50%) translate(var(--orbit-dx, 0px), var(--orbit-dy, 0px));
+      /* transform: 0s -- each rAF frame writes a new value directly; an
+         eased transform transition would lag behind and read as jitter.
+         Opacity/color keep easing so hover dimming stays smooth. */
+      transition: opacity 0.45s ease, transform 0s linear, color 0.45s ease;
+    }
+
+    /* ── Detail panel ── */
+    .work-panel {
+      border-top: 1px solid rgba(160,130,104,0.30);
+      padding-top: 28px;
+      position: sticky;
+      top: 96px;
+      /* Sized to the tallest real-client content so switching selections
+         never shifts anything beneath the panel. */
+      min-height: 400px;
+    }
+    .layout-tablet .work-panel,
+    .layout-mobile .work-panel { position: static; }
+    .work-panel-label {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--sage);
+    }
+    .work-panel-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 34px;
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--charcoal);
+      margin-top: 18px;
+      min-height: 36px;
+    }
+    .work-panel-cats {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(125,140,114,0.9);
+      margin-top: 10px;
+    }
+    .work-panel-desc {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 2.0;
+      color: var(--charcoal-muted);
+      margin-top: 18px;
+      max-width: 380px;
+    }
+    .work-panel-services {
+      margin-top: 20px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--charcoal-muted);
+      list-style: none;
+    }
+    .work-panel-services li::before { content: '— '; color: var(--bronze); }
+    .work-panel-link {
+      display: inline-block;
+      margin-top: 24px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--charcoal);
+      text-decoration: none;
+      border-bottom: 1px solid var(--champagne);
+      padding-bottom: 3px;
+    }
+    .work-panel-link[hidden] { display: none; }
+    .work-panel-link:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 3px;
+    }
+
+    /* ── "More collaborations" index (dormant until clients exceed the
+          20-node constellation cap) ── */
+    .work-more {
+      margin-top: 40px;
+      border-top: 1px solid rgba(160,130,104,0.14);
+      padding-top: 22px;
+    }
+    .work-more-label {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--charcoal-muted);
+      margin-bottom: 6px;
+    }
+    .work-more-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      list-style: none;
+    }
+    .work-more-list li { display: flex; align-items: center; }
+    .work-more-list li + li::before {
+      content: '·';
+      margin: 0 10px;
+      color: rgba(160,130,104,0.30);
+    }
+    .work-more-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--charcoal-muted);
+      padding: 14px 4px; /* ≥44px touch target (index is shown on tablet) */
+      min-height: 44px;
+    }
+    .work-more-btn:hover,
+    .work-more-btn[aria-pressed="true"] { color: var(--charcoal); }
+    .work-more-btn[aria-pressed="true"] { border-bottom: 1px solid var(--champagne); }
+    .work-more-btn:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 2px;
+    }
+
+    /* ── Mobile (≤600px): two-column accordion grid ── */
+    .work-mobile-grid { display: none; }
+    .layout-mobile .work-field-wrap,
+    .layout-mobile .work-panel,
+    .layout-mobile .work-more { display: none; }
+    .layout-mobile .work-mobile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-m-item { display: contents; }
+    .work-m-btn {
+      background: none;
+      border: none;
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+      cursor: pointer;
+      text-align: left;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--charcoal);
+      padding: 16px 12px 16px 0;
+      min-height: 48px;
+    }
+    .work-m-btn[aria-expanded="true"] { color: var(--champagne-dark); }
+    .work-m-btn:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: -2px;
+    }
+    .work-m-detail {
+      grid-column: 1 / -1;
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+      padding: 6px 0 26px;
+    }
+    .work-m-detail[hidden] { display: none; }
+    .work-m-detail .work-panel-desc { max-width: 100%; }
+
+    /* Visually-hidden live region (committed selections only) */
+    .work-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
     @media (max-width: 960px) {
       #portfolio { padding: 110px 0; }
 
@@ -1292,23 +1535,6 @@
         gap: 24px;
         margin-bottom: 56px;
       }
-
-      .work-card {
-        grid-template-columns: 40px minmax(0, 1fr) minmax(100px, 0.45fr);
-        gap: 0 36px;
-      }
-
-      /* Description wraps below on tablet */
-      .work-description {
-        grid-column: 2 / -1;
-        margin-top: 20px;
-        max-width: 100%;
-      }
-
-      .work-card:nth-child(5) {
-        max-width: 100%;
-        grid-column: auto;
-      }
     }
 
     @media (max-width: 600px) {
@@ -1316,40 +1542,6 @@
 
       .work-inner {
         padding: 0 28px;
-      }
-
-      .work-card {
-        grid-template-columns: 36px 1fr;
-        gap: 0 20px;
-        padding: 38px 0;
-      }
-
-      .work-client-wrap,
-      .work-category,
-      .work-description {
-        grid-column: 2;
-      }
-
-      .work-type {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 6px 16px;
-        margin-top: 14px;
-      }
-
-      .work-chip::after {
-        content: '·';
-        margin-left: 14px;
-        opacity: 0.35;
-      }
-
-      .work-chip:last-child::after {
-        display: none;
-      }
-
-      .work-description {
-        margin-top: 18px;
-        max-width: 100%;
       }
     }
 
@@ -1745,6 +1937,16 @@
     #brand-audit .audit-field {
       display: grid;
       gap: 9px;
+    }
+
+    /* Honeypot: off-screen rather than display:none/visibility:hidden,
+       which some spam bots specifically detect and skip. */
+    #brand-audit .audit-field-hp {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
     }
 
     #brand-audit .audit-field label {
@@ -2508,6 +2710,21 @@
         transform: none;
         transition: none;
       }
+
+      /* Selected Work constellation: no orbit, no settle stagger, no
+         transform transitions -- every client immediately visible. The
+         module also checks the same media query and never schedules
+         the rAF loop, but these rules make the state safe purely in CSS
+         (the !important on transform wins over .orbiting's translate). */
+      .work-field .work-node,
+      .work-field.settled .work-node,
+      .work-field.settled.orbiting .work-node {
+        opacity: 1;
+        transform: translate(-50%, -50%) !important;
+        transition: none;
+        animation: none !important;
+      }
+      .work-node .nm::after { transition: none; }
     }
   </style>
 </head>
@@ -2757,89 +2974,70 @@
         <p class="work-sub work-reveal" style="--work-delay:180ms">A look at early collaborations across brand presence, content, campaigns and digital storytelling.</p>
       </div>
 
-      <div class="work-list">
-        <article class="work-card work-reveal" style="--work-delay:260ms">
-          <div class="work-card-head">
-            <div class="work-index">01</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">LaFee</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Beauty and Lifestyle">
-              <span class="work-chip">Beauty</span>
-              <span class="work-chip">Lifestyle</span>
-            </div>
-          </div>
-          <p class="work-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
-        </article>
+      <div class="work-constellation" id="work-constellation">
 
-        <article class="work-card work-reveal" style="--work-delay:340ms">
-          <div class="work-card-head">
-            <div class="work-index">02</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Slides Jewels</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Jewellery">
-              <span class="work-chip">Jewellery</span>
-            </div>
-          </div>
-          <p class="work-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
-        </article>
+        <!-- Semantic source of truth + no-JS fallback. The constellation
+             module reads client data from this list; it is never
+             duplicated in JavaScript. To add a client: append one <li>
+             with a unique data-client-id, a tier (featured|standard|
+             compact) and the next data-order (tens). Optional fields
+             (data-services="A|B", data-case-study-url) are simply
+             omitted when they don't exist. -->
+        <ul class="work-data-list">
+          <li data-client-id="lafee" data-tier="featured" data-order="10">
+            <h3 class="work-data-name">LaFee</h3>
+            <p class="work-data-category">Beauty · Lifestyle</p>
+            <p class="work-data-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
+          </li>
+          <li data-client-id="slides-jewels" data-tier="standard" data-order="20">
+            <h3 class="work-data-name">Slides Jewels</h3>
+            <p class="work-data-category">Jewellery</p>
+            <p class="work-data-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
+          </li>
+          <li data-client-id="nuud" data-tier="featured" data-order="30">
+            <h3 class="work-data-name">NUUD</h3>
+            <p class="work-data-category">Lifestyle · Consumer</p>
+            <p class="work-data-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
+          </li>
+          <li data-client-id="miraki" data-tier="standard" data-order="40">
+            <h3 class="work-data-name">Miraki</h3>
+            <p class="work-data-category">Fashion · Lifestyle</p>
+            <p class="work-data-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
+          </li>
+          <li data-client-id="pusca-jewels" data-tier="standard" data-order="50">
+            <h3 class="work-data-name">Pusca Jewels</h3>
+            <p class="work-data-category">Jewellery</p>
+            <p class="work-data-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
+          </li>
+        </ul>
 
-        <article class="work-card work-reveal" style="--work-delay:420ms">
-          <div class="work-card-head">
-            <div class="work-index">03</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">NUUD</h3>
+        <!-- Enhanced constellation (populated by src/portfolio-constellation.js) -->
+        <div class="work-app" hidden>
+          <div class="work-stage">
+            <div class="work-field-wrap">
+              <div class="work-field" id="work-field" aria-label="Client constellation"></div>
+            </div>
+            <div>
+              <div class="work-panel" id="work-panel">
+                <p class="work-panel-label" id="work-panel-label">Selected Work</p>
+                <p class="work-panel-name" id="work-panel-name">A growing constellation.</p>
+                <p class="work-panel-cats" id="work-panel-cats"></p>
+                <p class="work-panel-desc" id="work-panel-desc">Hover, tap or tab through the constellation to explore each collaboration.</p>
+                <ul class="work-panel-services" id="work-panel-services" hidden></ul>
+                <a class="work-panel-link" id="work-panel-link" href="#" hidden>View case study</a>
+              </div>
+              <div class="work-more" id="work-more" hidden>
+                <p class="work-more-label">More collaborations</p>
+                <ul class="work-more-list" id="work-more-list"></ul>
+              </div>
             </div>
           </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Lifestyle and Consumer">
-              <span class="work-chip">Lifestyle</span>
-              <span class="work-chip">Consumer</span>
-            </div>
-          </div>
-          <p class="work-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
-        </article>
+          <div class="work-mobile-grid" id="work-mobile-grid"></div>
+        </div>
 
-        <article class="work-card work-reveal" style="--work-delay:500ms">
-          <div class="work-card-head">
-            <div class="work-index">04</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Miraki</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Fashion and Lifestyle">
-              <span class="work-chip">Fashion</span>
-              <span class="work-chip">Lifestyle</span>
-            </div>
-          </div>
-          <p class="work-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
-        </article>
+        <!-- Committed selections announce here; hover previews stay silent. -->
+        <div class="work-sr-only" aria-live="polite" id="work-announcer"></div>
 
-        <article class="work-card work-reveal" style="--work-delay:580ms">
-          <div class="work-card-head">
-            <div class="work-index">05</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Pusca Jewels</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Jewellery">
-              <span class="work-chip">Jewellery</span>
-            </div>
-          </div>
-          <p class="work-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
-        </article>
       </div>
     </div>
   </div>
@@ -2951,31 +3149,32 @@
             </div>
             <div class="audit-field">
               <label for="audit-last">Last Name</label>
-              <input id="audit-last" name="last_name" type="text" autocomplete="family-name" />
+              <input id="audit-last" name="last_name" type="text" autocomplete="family-name" required maxlength="100" aria-describedby="audit-last-error" />
+              <p class="audit-field-error" id="audit-last-error" hidden>Enter your last name.</p>
             </div>
           </div>
 
           <div class="audit-field">
             <label for="audit-email">Email Address</label>
-            <input id="audit-email" name="email" type="email" autocomplete="email" required aria-describedby="audit-email-error" />
+            <input id="audit-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="audit-email-error" />
             <p class="audit-field-error" id="audit-email-error" hidden>Enter a valid email address.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-brand">Brand / Company</label>
-            <input id="audit-brand" name="brand" type="text" autocomplete="organization" required aria-describedby="audit-brand-error" />
+            <input id="audit-brand" name="brand" type="text" autocomplete="organization" required maxlength="150" aria-describedby="audit-brand-error" />
             <p class="audit-field-error" id="audit-brand-error" hidden>Enter your brand or company name.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-web">Website or Instagram</label>
-            <input id="audit-web" name="website" type="text" inputmode="url" aria-describedby="audit-web-error" />
+            <input id="audit-web" name="website" type="text" inputmode="url" maxlength="200" aria-describedby="audit-web-error" />
             <p class="audit-field-error" id="audit-web-error" hidden>Enter a valid website or Instagram handle.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-service">Service Interested In</label>
-            <select id="audit-service" name="service">
+            <select id="audit-service" name="service" required aria-describedby="audit-service-error">
               <option value="" disabled selected></option>
               <option>Brand Strategy</option>
               <option>Brand Identity</option>
@@ -2984,25 +3183,34 @@
               <option>Growth &amp; Performance</option>
               <option>Full Brand Package</option>
             </select>
+            <p class="audit-field-error" id="audit-service-error" hidden>Select a service you're interested in.</p>
           </div>
 
           <div class="audit-field">
             <label for="audit-brief">Tell us about your brand</label>
-            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?" required minlength="15" aria-describedby="audit-brief-error"></textarea>
+            <textarea id="audit-brief" name="brief" placeholder="Where are you right now, and what are you trying to improve?" required minlength="15" maxlength="4000" aria-describedby="audit-brief-error"></textarea>
             <p class="audit-field-error" id="audit-brief-error" hidden>Tell us briefly what you need help with.</p>
+          </div>
+
+          <!-- Honeypot: hidden from real visitors, left blank by them; a
+               filled value means the submission came from a bot. Not
+               display:none (some bots specifically skip those). -->
+          <div class="audit-field-hp" aria-hidden="true">
+            <label for="audit-hp">Company Website</label>
+            <input id="audit-hp" name="company_website" type="text" tabindex="-1" autocomplete="off" />
           </div>
 
           <p class="audit-form-status" id="audit-form-status" aria-live="polite" hidden></p>
 
           <button type="submit" class="btn-primary audit-submit">Book a Discovery Call</button>
           <p class="audit-error-msg" id="audit-error-msg" tabindex="-1" aria-live="assertive">
-            Your request could not be sent. Please try again, or contact us directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
+            We couldn't submit your request right now. Please try again in a moment or contact us directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>.
           </p>
         </form>
 
         <div class="audit-success" id="audit-success" aria-live="polite">
-          <p class="audit-success-title">Your request was sent.</p>
-          <p class="audit-success-body">We could not independently confirm delivery. If you do not hear from us within a couple of days, please reach out directly at <a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or <a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.</p>
+          <p class="audit-success-title">Thank you for reaching out to NRC.</p>
+          <p class="audit-success-body">We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.</p>
         </div>
       </div>
 
@@ -3033,6 +3241,9 @@
   <!-- THREE.JS -->
 <script type="module">
     import * as THREE from 'three';
+    // Selected Work constellation (self-initializing; reads client data
+    // from the semantic .work-data-list markup).
+    import './src/portfolio-constellation.js';
 
     // ────────────────────────────────────────────────
     // HERO SCENE — warm editorial atmosphere
@@ -3419,15 +3630,20 @@
     })();
 
     // ────────────────────────────────────────────────
-    // CONTACT FORM → GOOGLE SHEETS
-    // 1. Deploy your Apps Script (see setup instructions).
-    // 2. Paste the deployed web app URL into SCRIPT_URL below.
+    // CONTACT FORM → GOOGLE APPS SCRIPT (sheet + dual email)
+    // Endpoint comes from VITE_DISCOVERY_FORM_ENDPOINT (see .env.example).
+    // Vite bundles this inline module script and replaces import.meta.env.*
+    // with the real build-time value -- confirmed empirically before this
+    // was written (see report for the test).
     // ────────────────────────────────────────────────
     (function () {
-      var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNCRgS4oLCViqwPmQhmprU9r_qolE2ADycLAPAOHk1UhV2pcyIy6Mh-pcK9o6LItI/exec';
+      var SCRIPT_URL = (typeof import.meta !== 'undefined' && import.meta.env)
+        ? import.meta.env.VITE_DISCOVERY_FORM_ENDPOINT
+        : '';
 
       var form    = document.getElementById('audit-contact-form');
       var success = document.getElementById('audit-success');
+      var successBodyEl = document.querySelector('.audit-success-body');
       var errMsg  = document.getElementById('audit-error-msg');
       var statusEl = document.getElementById('audit-form-status');
       if (!form) return;
@@ -3436,7 +3652,9 @@
       // ── VALIDATION ──
       // novalidate stays on the <form> so the browser's native popups never
       // fire; this custom logic fully replaces native validation and owns
-      // all messaging, timing and focus behavior.
+      // all messaging, timing and focus behavior. The Apps Script backend
+      // re-validates and sanitizes every value independently -- this is
+      // a UX layer, not the source of truth.
       var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       // "Website or Instagram": accepts a URL with/without protocol OR a
       // bare/@-prefixed handle. Only rejects input that is clearly not a
@@ -3465,6 +3683,11 @@
         return toggleField(el, el.value.trim().length > 0);
       }
 
+      function validateLastName() {
+        var el = document.getElementById('audit-last');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
       function validateEmail() {
         var el = document.getElementById('audit-email');
         var val = el.value.trim();
@@ -3483,20 +3706,27 @@
         return toggleField(el, WEBSITE_RE.test(val) && /[a-z0-9]/i.test(val));
       }
 
+      function validateService() {
+        var el = document.getElementById('audit-service');
+        return toggleField(el, el.value.trim().length > 0);
+      }
+
       function validateBrief() {
         var el = document.getElementById('audit-brief');
         return toggleField(el, el.value.trim().length >= BRIEF_MIN_LENGTH);
       }
 
       var validators = {
-        'audit-first': validateFirstName,
-        'audit-email': validateEmail,
-        'audit-brand': validateBrand,
-        'audit-web':   validateWebsite,
-        'audit-brief': validateBrief
+        'audit-first':   validateFirstName,
+        'audit-last':    validateLastName,
+        'audit-email':   validateEmail,
+        'audit-brand':   validateBrand,
+        'audit-web':     validateWebsite,
+        'audit-service': validateService,
+        'audit-brief':   validateBrief
       };
       // Visual/DOM order, used to find the first invalid field to focus.
-      var fieldOrder = ['audit-first', 'audit-email', 'audit-brand', 'audit-web', 'audit-brief'];
+      var fieldOrder = ['audit-first', 'audit-last', 'audit-email', 'audit-brand', 'audit-web', 'audit-service', 'audit-brief'];
 
       // Only start live re-validation (clearing errors as the visitor
       // corrects a field) after the first failed submit attempt -- errors
@@ -3507,31 +3737,42 @@
         liveValidationAttached = true;
         fieldOrder.forEach(function (id) {
           var el = document.getElementById(id);
-          if (el) el.addEventListener('input', function () { validators[id](); });
+          if (el) el.addEventListener((el.tagName === 'SELECT' ? 'change' : 'input'), function () { validators[id](); });
         });
       }
 
       var submitting = false;
 
+      function showRecoverableError() {
+        if (!errMsg) return;
+        errMsg.innerHTML = "We couldn't submit your request right now. Please try again in a moment or contact us directly at " +
+          '<a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a>.';
+        errMsg.style.display = 'block';
+        errMsg.focus();
+      }
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') {
-          console.warn('NRC: paste your Google Apps Script URL into SCRIPT_URL in index.html');
+        if (!SCRIPT_URL) {
+          console.error('NRC: VITE_DISCOVERY_FORM_ENDPOINT is not configured -- see .env.example');
+          showRecoverableError();
           return;
         }
 
         if (submitting) return; // ignore repeated submits while one is in flight
 
-        var firstOk = validateFirstName();
-        var emailOk = validateEmail();
-        var brandOk = validateBrand();
-        var webOk   = validateWebsite();
-        var briefOk = validateBrief();
+        var firstOk   = validateFirstName();
+        var lastOk    = validateLastName();
+        var emailOk   = validateEmail();
+        var brandOk   = validateBrand();
+        var webOk     = validateWebsite();
+        var serviceOk = validateService();
+        var briefOk   = validateBrief();
 
         attachLiveValidation();
 
-        if (!(firstOk && emailOk && brandOk && webOk && briefOk)) {
+        if (!(firstOk && lastOk && emailOk && brandOk && webOk && serviceOk && briefOk)) {
           if (statusEl) {
             statusEl.textContent = 'Please fix the highlighted fields before submitting.';
             statusEl.hidden = false;
@@ -3547,12 +3788,32 @@
 
         submitting = true;
         var originalLabel = btn.textContent;
-        btn.textContent   = 'Sending…';
+        btn.textContent   = 'Submitting…';
         btn.disabled      = true;
         if (errMsg) errMsg.style.display = 'none';
 
-        var body = new URLSearchParams(new FormData(form));
-        body.append('submitted_at', new Date().toISOString());
+        var formData = new FormData(form);
+        var payload = {
+          first_name: formData.get('first_name') || '',
+          last_name:  formData.get('last_name') || '',
+          email:      formData.get('email') || '',
+          brand:      formData.get('brand') || '',
+          website:    formData.get('website') || '',
+          service:    formData.get('service') || '',
+          brief:      formData.get('brief') || '',
+          company_website: formData.get('company_website') || '' // honeypot
+        };
+
+        function resetSubmitState() {
+          submitting = false;
+        }
+
+        function handleFailure() {
+          btn.textContent = originalLabel;
+          btn.disabled    = false;
+          showRecoverableError();
+          resetSubmitState();
+        }
 
         // Apps Script cold starts can take several seconds; 15s is long
         // enough to avoid a false timeout on a normal slow request, short
@@ -3563,38 +3824,60 @@
         var controller = supportsAbort ? new AbortController() : null;
         var timeoutId = controller ? setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
 
-        function showRecoverableError(isTimeout) {
-          if (!errMsg) return;
-          var lead = isTimeout
-            ? 'This is taking longer than expected and may not have gone through.'
-            : 'Your request could not be sent.';
-          errMsg.innerHTML = lead + ' Please try again, or contact us directly at ' +
-            '<a href="mailto:nrbrandculture@gmail.com">nrbrandculture@gmail.com</a> or ' +
-            '<a href="https://wa.me/919347209987" target="_blank" rel="noopener noreferrer">WhatsApp</a>.';
-          errMsg.style.display = 'block';
-          errMsg.focus();
-        }
-
-        var fetchOptions = { method: 'POST', mode: 'no-cors', body: body };
+        // Content-Type text/plain keeps this a CORS "simple request" so
+        // Apps Script's response comes back readable (not opaque) --
+        // verified directly against the deployed endpoint before this was
+        // written (see report). application/json here would trigger a
+        // preflight OPTIONS request that Apps Script does not handle.
+        var fetchOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        };
         if (controller) fetchOptions.signal = controller.signal;
 
         fetch(SCRIPT_URL, fetchOptions)
-          .then(function () {
-            // mode:no-cors returns an opaque response -- a resolved fetch
-            // means the request was dispatched, but delivery still cannot
-            // be independently confirmed. This is the best available
-            // signal without a server-side change (see report).
+          .then(function (res) {
             if (timeoutId) clearTimeout(timeoutId);
-            form.style.display = 'none';
-            if (success) success.style.display = 'block';
-            submitting = false;
+            return res.text().then(function (text) {
+              var result;
+              try { result = JSON.parse(text); } catch (parseErr) { result = null; }
+
+              // sheetSaved is the only pass/fail gate -- the lead record
+              // is the primary outcome, so a saved record is never
+              // reported as a failure to the visitor. But the wording
+              // shown *within* that success state must stay honest about
+              // whether the confirmation email actually went out.
+              if (result && result.sheetSaved) {
+                if (successBodyEl) {
+                  if (result.customerEmailSent) {
+                    // Customer email sent -- internal-notification status
+                    // doesn't change what the visitor sees, only console
+                    // visibility for us (below).
+                    successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.";
+                  } else if (result.internalEmailSent) {
+                    successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. We were unable to send the confirmation email, but your request has been recorded successfully.";
+                  } else {
+                    successBodyEl.textContent = 'Your discovery call request has been recorded successfully, and our team will get back to you within 48 hours. We were unable to send the confirmation email at this time.';
+                  }
+                }
+
+                if (!result.internalEmailSent) {
+                  console.error('NRC: internal notification email failed to send.' + (result.internalEmailError ? ' ' + result.internalEmailError : ''));
+                }
+
+                form.reset();
+                form.style.display = 'none';
+                if (success) success.style.display = 'block';
+                resetSubmitState();
+              } else {
+                handleFailure();
+              }
+            });
           })
-          .catch(function (err) {
+          .catch(function () {
             if (timeoutId) clearTimeout(timeoutId);
-            btn.textContent = originalLabel;
-            btn.disabled    = false;
-            showRecoverableError(!!(err && err.name === 'AbortError'));
-            submitting = false;
+            handleFailure();
           });
       });
     })();
