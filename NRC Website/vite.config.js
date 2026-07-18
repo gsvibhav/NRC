@@ -5,7 +5,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        fbxPreview: 'fbx-preview.html',
         privacy: 'privacy.html',
       },
     },

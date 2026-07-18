@@ -1709,6 +1709,7 @@
       border-bottom: 1px solid rgba(138,112,96,.35);
       padding-bottom: 1px;
       transition: color 0.3s ease, border-color 0.3s ease;
+      overflow-wrap: break-word; /* long unbroken values (email, handle) wrap instead of overflowing the value column at narrow widths */
     }
 
     #brand-audit .audit-contact-link:hover {
@@ -1812,6 +1813,24 @@
     #brand-audit .audit-field.audit-field-invalid select,
     #brand-audit .audit-field.audit-field-invalid textarea {
       border-color: var(--champagne-dark);
+    }
+
+    /* Keyboard focus ring -- outline is a separate box property from the
+       border-color used above for focus/invalid states, so it stays
+       visible even when a field is both focused and invalid (those two
+       border-color rules have equal specificity and can't stack). Scoped
+       to :focus-visible so the submit button and links keep their prior
+       mouse-click appearance (browsers already apply :focus-visible to
+       text fields on click, which is why the ring also shows there). */
+    #brand-audit .audit-field input:focus-visible,
+    #brand-audit .audit-field select:focus-visible,
+    #brand-audit .audit-field textarea:focus-visible,
+    #brand-audit .audit-submit:focus-visible,
+    #brand-audit .audit-contact-link:focus-visible,
+    #brand-audit .audit-error-msg a:focus-visible,
+    #brand-audit .audit-success-body a:focus-visible {
+      outline: 2px solid var(--champagne-light);
+      outline-offset: 2px;
     }
 
     #brand-audit .audit-field-error {
@@ -2552,12 +2571,17 @@
         muted
         loop
         playsinline
-        preload="metadata"
+        preload="auto"
         poster="assets/hero-character.png"
         disablepictureinpicture
         controlslist="nodownload nofullscreen noremoteplayback"
       >
-        <source src="/media/hero-character.mp4" type="video/mp4" media="(min-width: 481px)" />
+        <!-- Source selection runs once at element init, not on resize --
+             matches the reliable range the previous single-source
+             media query already relied on. Below 481px .hero-character
+             is display:none, so no source is offered there. -->
+        <source src="/media/optimized/hero-character-mobile.mp4" type="video/mp4" media="(min-width: 481px) and (max-width: 768px)" />
+        <source src="/media/optimized/hero-character-desktop.mp4" type="video/mp4" media="(min-width: 769px)" />
       </video>
     </div>
   </section>
@@ -2679,7 +2703,7 @@
   <!-- FOUNDER -->
   <div id="about">
     <div class="founder-inner">
-      <div class="founder-image-panel founder-reveal" style="--founder-delay:0ms" aria-label="NRC founder portrait area">
+      <div class="founder-image-panel founder-reveal" style="--founder-delay:0ms">
         <div class="founder-mark">Founder-Led Studio</div>
         <img class="founder-logo-art" src="assets/nrc-logo-founder.jpeg" alt="" />
         <p class="founder-caption">Built closely, led personally, and shaped around the brands willing to become more exacting about how they are seen.</p>
