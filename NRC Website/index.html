@@ -97,6 +97,31 @@
       --glass-tint-dark:     rgba(26,23,20,0.80);
       --glass-border:        rgba(184,151,128,0.22);
       --glass-fallback-dark: rgba(19,17,15,0.97);
+
+      /* ── LIQUID GLASS — WORK GALLERY CARDS (extends the nav's --glass-*
+         system above with a richer, sculpted variant). The gallery section
+         now shares the page's ivory background rather than sitting on a
+         dark stage, so the glass tint is charcoal-based (not light/bone) --
+         a translucent light pane would nearly vanish against ivory. The
+         bone/cream card text (in the gallery CSS) keeps strong contrast
+         against this darker glass. Shadows are warm-brown, not near-black,
+         so they read as soft depth on a light surface rather than a heavy
+         cutout. Resting vs. front/hover/focus is two full sets so the
+         "increase clarity" interaction requirement is just a class
+         toggle, not a recomputation. Tune the whole effect from here. */
+      --work-glass-blur:          20px;   /* resting card blur */
+      --work-glass-blur-active:   30px;   /* front-facing / hover / focus */
+      --work-glass-sat:           1.15;   /* resting saturation boost */
+      --work-glass-sat-active:    1.30;
+      --work-glass-tint:          rgba(42,36,32,0.64);   /* charcoal-tinted glass, resting */
+      --work-glass-tint-active:   rgba(42,36,32,0.74);   /* front/hover/focus: slightly denser */
+      --work-glass-sheen:         rgba(255,252,246,0.22); /* top-edge + specular highlight */
+      --work-glass-sheen-active:  rgba(255,252,246,0.34);
+      --work-glass-border:        rgba(184,151,128,0.40);  /* refractive edge */
+      --work-glass-border-active: rgba(204,175,152,0.78);
+      --work-glass-shadow:        rgba(74,58,42,0.30);     /* warm, soft outer shadow -- visible on ivory */
+      --work-glass-inner-shadow:  rgba(42,32,24,0.34);     /* inner depth shadow */
+      --work-glass-fallback:      rgba(42,36,32,0.92);     /* opaque card for no-blur-support */
     }
 
     html { scroll-behavior: smooth; }
@@ -1174,15 +1199,23 @@
       transform: translateY(0);
     }
 
-    /* ── SELECTED WORK — constellation (Phase 4, prototype-approved) ──
-       Tiered radial field + fixed editorial detail panel. Client data is
-       authored in .work-data-list (the no-JS fallback); the module in
-       src/portfolio-constellation.js enhances it. */
+    /* ── SELECTED WORK — 3D circular gallery ──────────────────────────
+       Client data is authored in .work-data-list (the no-JS fallback);
+       src/portfolio-gallery.js reads it and mounts a continuously
+       auto-rotating 3D ring -- no scroll-linked section, no sticky
+       viewport, one shared light (ivory) background throughout. Below
+       600px the ring is replaced by a horizontal scroll-snap strip --
+       not a shrunk ring. */
 
-    /* No-JS fallback list: plain editorial rows. Hidden once JS runs. */
+    /* No-JS fallback list: plain editorial rows, given its own measure
+       (it no longer sits inside .work-inner -- see markup restructure). */
     html.js .work-data-list { display: none; }
+    html.work-gallery-failed .work-data-list { display: block !important; }
     .work-data-list {
       list-style: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 72px;
     }
     .work-data-list > li {
       padding: 40px 0;
@@ -1217,319 +1250,322 @@
       margin-top: 14px;
     }
 
-    html:not(.js) .work-app { display: none; }
+    html:not(.js) .work-gallery { display: none; }
 
-    .work-stage {
-      display: grid;
-      grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
-      gap: 64px;
-      align-items: start;
-    }
-    .layout-tablet .work-stage,
-    .layout-mobile .work-stage {
-      grid-template-columns: 1fr;
-      gap: 48px;
-    }
-
-    .work-field {
+    /* ── Gallery viewport ── a normal-flow block, not a scroll-jacked
+       runway: no 280vh spacer, no position:sticky. Height is sized to
+       show the cards comfortably, independent of scroll length. Same
+       ivory background as the heading above it -- no separate dark
+       stage. */
+    .work-gallery-viewport {
       position: relative;
-      width: 100%;
-      aspect-ratio: 620 / 560;
-      overflow: hidden; /* bounded: nothing escapes the field */
-    }
-    .layout-tablet .work-field {
-      aspect-ratio: 640 / 480;
-      max-width: 640px;
-      margin: 0 auto;
+      height: 60vh;
+      min-height: 480px;
+      max-height: 680px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ivory);
+      /* perspective belongs on this static ancestor, not on the ring
+         that rotates -- putting it on the rotating element would spin
+         the camera's own vanishing point along with the ring, throwing
+         cards out of the visible frustum at certain rotation angles. */
+      perspective: 1500px;
     }
 
-    /* Hairline orbital guides — same quiet ring motif as the hero */
-    .work-orbit {
+    /* Static, non-animated tonal variation (existing NRC palette only)
+       so the glass has something soft to refract against -- no imagery,
+       no canvas. Kept subtle: this is a light section, not a dark stage. */
+    .work-gallery-bg {
       position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      border: 1px solid rgba(160,130,104,0.14);
-      border-radius: 50%;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 58% 46% at 22% 28%, var(--champagne-dim), transparent 62%),
+        radial-gradient(ellipse 52% 44% at 80% 70%, var(--sage-dim), transparent 60%),
+        radial-gradient(ellipse 70% 60% at 50% 100%, rgba(160,130,104,0.10), transparent 65%),
+        var(--ivory);
       pointer-events: none;
     }
 
-    .work-node {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--charcoal);
-      text-align: center;
-      padding: 6px 10px; /* enlarges the hit area beyond the glyphs */
-      line-height: 1.05;
-      max-width: 200px;
-      transition: opacity 0.45s ease, color 0.45s ease;
-    }
-    .work-node .nm { display: inline-block; }
-    .work-node .nm::after { /* selection hairline */
-      content: '';
-      display: block;
+    .work-gallery-ring {
+      position: relative;
+      z-index: 1;
+      width: 1px;
       height: 1px;
-      background: var(--champagne);
-      margin-top: 6px;
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-    }
-    .work-node[aria-pressed="true"] .nm::after { transform: scaleX(1); }
-
-    .work-node.tier-featured .nm {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(26px, 2.4vw, 36px);
-      font-weight: 300;
-    }
-    .work-node.tier-standard .nm {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(18px, 1.6vw, 23px);
-      font-weight: 300;
-    }
-    /* Compact tier: dormant until the roster needs a third scale.
-       12px (not smaller) so compact clients read as clients. */
-    .work-node.tier-compact .nm {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 1.6px;
-      text-transform: uppercase;
-      color: #5D6A54; /* deepened sage — 5.0:1 on ivory */
+      transform-style: preserve-3d;
+      transform: rotateY(var(--ring-angle, 0deg));
     }
 
-    .work-field.has-active .work-node { opacity: 0.42; }
-    .work-field.has-active .work-node:hover,
-    .work-field.has-active .work-node:focus-visible,
-    .work-field.has-active .work-node[aria-pressed="true"] { opacity: 1; }
+    /* ── Card: positioning + base glass body ── */
+    .work-card {
+      --card-w: clamp(230px, 20vw, 300px);
+      --card-h: clamp(300px, 27vw, 380px);
+      --ring-radius: clamp(320px, 26vw, 480px);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--card-w);
+      height: var(--card-h);
+      margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+      /* The card's own facing is only ~45% as rotated as its true orbital
+         position (a "dampened billboard"): with just 5 cards spaced 72°
+         apart, a literal 72° rotateY foreshortens a card to a near-
+         invisible sliver. Position still uses the full angle (so spacing
+         stays even); a counter-rotation afterwards (rotating around the
+         card's own center, not the ring's) brings it back toward facing
+         the camera without moving it. The counter-rotation is driven by
+         --card-effective -- the card's angle already normalized to
+         [-180,180] by the rAF loop -- rather than the raw, unbounded
+         (card-angle + ring-angle) sum: that sum grows past 360deg as the
+         ring spins, and feeding it straight into this calc() produced a
+         mirrored (backface-showing) card once it crossed 180deg. */
+      transform: rotateY(var(--card-angle, 0deg)) translateZ(var(--ring-radius))
+                 rotateY(calc(var(--card-effective, 0deg) * -0.55))
+                 scale(calc(0.80 + var(--depth, 1) * 0.20));
+      opacity: calc(0.22 + var(--depth, 1) * 0.78);
+      backface-visibility: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      cursor: default;
+    }
+    a.work-card { cursor: pointer; }
 
-    .work-node:focus-visible {
+    .work-card:focus-visible {
       outline: 2px solid var(--champagne-dark);
-      outline-offset: 3px;
+      outline-offset: 4px;
+      border-radius: 24px;
     }
 
-    /* Settle-in: one-shot entrance from near-center; hands off to drift. */
-    .work-field .work-node {
-      opacity: 0;
-      transform: translate(-50%, -50%) translate(var(--inx, 0px), var(--iny, 0px));
-    }
-    .work-field.measuring .work-node {
-      /* Layout measurement must see base geometry only. */
-      opacity: 1 !important;
-      transform: translate(-50%, -50%) !important;
-      transition: none !important;
-      animation: none !important;
-    }
-    .work-field.settled .work-node {
-      opacity: 1;
-      transform: translate(-50%, -50%);
+    /* Charcoal-tinted glass (not light/white) so the card reads clearly
+       against the ivory page behind it -- a translucent light pane here
+       would nearly vanish on a light background. Bone/cream text (below)
+       keeps strong contrast against this darker glass. */
+    .work-card-glass {
+      position: relative;
+      height: 100%;
+      border-radius: 22px;
+      padding: clamp(26px, 2.6vw, 38px) clamp(22px, 2.4vw, 32px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background:
+        linear-gradient(155deg, rgba(255,252,246,0.10), rgba(255,252,246,0.02) 42%, rgba(10,8,6,0.16) 100%),
+        var(--work-glass-tint);
+      border: 1px solid var(--work-glass-border);
+      box-shadow:
+        inset 0 1px 0 var(--work-glass-sheen),
+        inset 0 -22px 34px -24px var(--work-glass-inner-shadow),
+        0 20px 40px -14px var(--work-glass-shadow);
+      backdrop-filter: blur(var(--work-glass-blur)) saturate(var(--work-glass-sat));
+      -webkit-backdrop-filter: blur(var(--work-glass-blur)) saturate(var(--work-glass-sat));
       transition:
-        opacity 0.9s cubic-bezier(0.16,1,0.3,1),
-        transform 0.9s cubic-bezier(0.16,1,0.3,1),
-        color 0.45s ease;
-      transition-delay: var(--settle-delay, 0ms), var(--settle-delay, 0ms), 0ms;
-    }
-    .work-field.settled.settle-done .work-node {
-      transition:
-        opacity 0.45s ease,
-        transform 0.9s cubic-bezier(0.16,1,0.3,1),
-        color 0.45s ease;
-      transition-delay: 0ms;
-    }
-    /* Grouped orbital motion (Phase 5): a single JS rAF loop advances one
-       angle per tier group and writes only these two custom properties
-       per node per frame -- transform-only, no layout thrash. Freezing
-       the loop freezes the transform exactly in place (no snap). */
-    .work-field.settled.orbiting .work-node {
-      transform: translate(-50%, -50%) translate(var(--orbit-dx, 0px), var(--orbit-dy, 0px));
-      /* transform: 0s -- each rAF frame writes a new value directly; an
-         eased transform transition would lag behind and read as jitter.
-         Opacity/color keep easing so hover dimming stays smooth. */
-      transition: opacity 0.45s ease, transform 0s linear, color 0.45s ease;
+        background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease,
+        backdrop-filter 0.5s ease;
     }
 
-    /* ── Detail panel ── */
-    .work-panel {
-      border-top: 1px solid rgba(160,130,104,0.30);
-      padding-top: 28px;
-      position: sticky;
-      top: 96px;
-      /* Sized to the tallest real-client content so switching selections
-         never shifts anything beneath the panel. */
-      min-height: 400px;
+    /* Restrained top-edge shine -- a line, not a uniform outline. */
+    .work-card-glass::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 12%; right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--work-glass-sheen), transparent);
     }
-    .layout-tablet .work-panel,
-    .layout-mobile .work-panel { position: static; }
-    .work-panel-label {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--sage);
+
+    /* Reflection / specular layer -- a pseudo-element so no extra DOM
+       node is needed; --px/--py are only ever written for the currently
+       hovered card (see portfolio-gallery.js), all others simply keep
+       their default position. */
+    .work-card-glass::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(360px circle at var(--px, 28%) var(--py, 18%),
+                    rgba(255,255,255,0.14), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
     }
-    .work-panel-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 34px;
-      font-weight: 300;
-      line-height: 1.05;
-      color: var(--charcoal);
-      margin-top: 18px;
-      min-height: 36px;
+
+    /* Optional future image layer -- absent entirely when data has no
+       image (see portfolio-gallery.js: imageLayerHTML returns ''), so
+       there is never an empty/broken-looking box. When present, it sits
+       beneath the glass content surface, inside the same rounded card. */
+    .work-card-image {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-repeat: no-repeat;
+      opacity: 0.55;
     }
-    .work-panel-cats {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(125,140,114,0.9);
-      margin-top: 10px;
+    .work-card-image ~ .work-card-content {
+      position: relative;
+      z-index: 1;
     }
-    .work-panel-desc {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 2.0;
-      color: var(--charcoal-muted);
-      margin-top: 18px;
-      max-width: 380px;
+
+    .work-card-content {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
-    .work-panel-services {
-      margin-top: 20px;
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 12px;
-      font-weight: 300;
-      line-height: 1.9;
-      color: var(--charcoal-muted);
-      list-style: none;
-    }
-    .work-panel-services li::before { content: '— '; color: var(--bronze); }
-    .work-panel-link {
-      display: inline-block;
-      margin-top: 24px;
+
+    .work-card-eyebrow {
       font-family: 'Inter', 'Montserrat', sans-serif;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 2.5px;
+      letter-spacing: 2px;
       text-transform: uppercase;
-      color: var(--charcoal);
-      text-decoration: none;
-      border-bottom: 1px solid var(--champagne);
-      padding-bottom: 3px;
+      color: var(--champagne-light);
+      opacity: 0.9;
     }
-    .work-panel-link[hidden] { display: none; }
-    .work-panel-link:focus-visible {
-      outline: 2px solid var(--champagne-dark);
-      outline-offset: 3px;
-    }
+    .work-card-eyebrow-div { color: var(--text-muted); }
 
-    /* ── "More collaborations" index (dormant until clients exceed the
-          20-node constellation cap) ── */
-    .work-more {
-      margin-top: 40px;
-      border-top: 1px solid rgba(160,130,104,0.14);
-      padding-top: 22px;
-    }
-    .work-more-label {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--charcoal-muted);
-      margin-bottom: 6px;
-    }
-    .work-more-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0;
-      list-style: none;
-    }
-    .work-more-list li { display: flex; align-items: center; }
-    .work-more-list li + li::before {
-      content: '·';
-      margin: 0 10px;
-      color: rgba(160,130,104,0.30);
-    }
-    .work-more-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 1px;
-      color: var(--charcoal-muted);
-      padding: 14px 4px; /* ≥44px touch target (index is shown on tablet) */
-      min-height: 44px;
-    }
-    .work-more-btn:hover,
-    .work-more-btn[aria-pressed="true"] { color: var(--charcoal); }
-    .work-more-btn[aria-pressed="true"] { border-bottom: 1px solid var(--champagne); }
-    .work-more-btn:focus-visible {
-      outline: 2px solid var(--champagne-dark);
-      outline-offset: 2px;
-    }
-
-    /* ── Mobile (≤600px): two-column accordion grid ── */
-    .work-mobile-grid { display: none; }
-    .layout-mobile .work-field-wrap,
-    .layout-mobile .work-panel,
-    .layout-mobile .work-more { display: none; }
-    .layout-mobile .work-mobile-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border-top: 1px solid rgba(160,130,104,0.14);
-    }
-    .work-m-item { display: contents; }
-    .work-m-btn {
-      background: none;
-      border: none;
-      border-bottom: 1px solid rgba(160,130,104,0.14);
-      cursor: pointer;
-      text-align: left;
+    .work-card-name {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 22px;
+      font-size: clamp(24px, 2vw, 30px);
       font-weight: 300;
-      line-height: 1.1;
-      color: var(--charcoal);
-      padding: 16px 12px 16px 0;
-      min-height: 48px;
+      line-height: 1.05;
+      color: var(--bone);
+      margin-top: 12px;
     }
-    .work-m-btn[aria-expanded="true"] { color: var(--champagne-dark); }
-    .work-m-btn:focus-visible {
-      outline: 2px solid var(--champagne-dark);
-      outline-offset: -2px;
-    }
-    .work-m-detail {
-      grid-column: 1 / -1;
-      border-bottom: 1px solid rgba(160,130,104,0.14);
-      padding: 6px 0 26px;
-    }
-    .work-m-detail[hidden] { display: none; }
-    .work-m-detail .work-panel-desc { max-width: 100%; }
 
-    /* Visually-hidden live region (committed selections only) */
-    .work-sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
+    .work-card-desc {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12.5px;
+      font-weight: 300;
+      line-height: 1.75;
+      color: var(--text-muted);
+      margin-top: 14px;
       overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+      transition: color 0.4s ease;
     }
 
+    .work-card-services {
+      list-style: none;
+      margin-top: 14px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10.5px;
+      font-weight: 300;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .work-card-services li::before { content: '— '; color: var(--champagne); }
+
+    .work-card-cta {
+      display: inline-block;
+      margin-top: auto;
+      padding-top: 16px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--champagne-light);
+    }
+
+    /* ── Front-facing / hover / focus: strongest glass treatment ── */
+    .work-card.is-front .work-card-glass,
+    .work-card:hover .work-card-glass,
+    .work-card:focus-visible .work-card-glass {
+      background:
+        linear-gradient(155deg, rgba(255,252,246,0.16), rgba(255,252,246,0.03) 42%, rgba(10,8,6,0.14) 100%),
+        var(--work-glass-tint-active);
+      border-color: var(--work-glass-border-active);
+      box-shadow:
+        inset 0 1px 0 var(--work-glass-sheen-active),
+        inset 0 -22px 34px -24px var(--work-glass-inner-shadow),
+        0 26px 50px -16px var(--work-glass-shadow);
+      backdrop-filter: blur(var(--work-glass-blur-active)) saturate(var(--work-glass-sat-active));
+      -webkit-backdrop-filter: blur(var(--work-glass-blur-active)) saturate(var(--work-glass-sat-active));
+    }
+    .work-card.is-front .work-card-glass::after,
+    .work-card:hover .work-card-glass::after,
+    .work-card:focus-visible .work-card-glass::after {
+      opacity: 0.75;
+    }
+    .work-card.is-front .work-card-desc,
+    .work-card:hover .work-card-desc,
+    .work-card:focus-visible .work-card-desc {
+      color: var(--bone);
+    }
+    .work-card.is-front,
+    .work-card:hover,
+    .work-card:focus-visible {
+      transform: rotateY(var(--card-angle, 0deg)) translateZ(var(--ring-radius))
+                 rotateY(calc(var(--card-effective, 0deg) * -0.55))
+                 scale(calc(0.86 + var(--depth, 1) * 0.20));
+    }
+
+    /* Solid fallback where backdrop-filter isn't supported */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .work-card-glass {
+        background: var(--work-glass-fallback);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .work-card-glass {
+        background: var(--work-glass-fallback);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+    @media (forced-colors: active) {
+      .work-card-glass {
+        background: Canvas;
+        border: 1px solid CanvasText;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+      .work-card-name, .work-card-desc, .work-card-eyebrow { color: CanvasText; }
+    }
+
+    /* ── Reduced motion: stable static layout, no depth/rotation cues,
+          same light background ── */
+    @media (prefers-reduced-motion: reduce) {
+      .work-gallery-viewport {
+        height: auto;
+        max-height: none;
+        padding: 80px 24px;
+      }
+      .work-gallery-ring {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 32px;
+        transform: none;
+        width: auto; height: auto;
+      }
+      .work-card {
+        position: static;
+        margin: 0;
+        transform: none !important;
+        opacity: 1 !important;
+        width: clamp(240px, 30vw, 320px);
+        height: auto;
+      }
+      .work-card-glass::after { display: none; }
+    }
+
+    /* ── Mobile (≤600px): horizontal scroll-snap strip, not a shrunk ring ── */
+    .work-gallery-mobile {
+      display: none;
+    }
+
+    /* Restored from the pre-gallery layout: header/section responsive
+       padding that this section always had (was nested inside the block
+       this CSS replaces; re-declared here so it isn't lost). */
     @media (max-width: 960px) {
       #portfolio { padding: 110px 0; }
-
-      .work-inner {
-        padding: 0 40px;
-      }
-
+      .work-inner { padding: 0 40px; }
       .work-header {
         grid-template-columns: 1fr;
         gap: 24px;
@@ -1539,12 +1575,34 @@
 
     @media (max-width: 600px) {
       #portfolio { padding: 96px 0; }
+      .work-inner { padding: 0 28px; }
 
-      .work-inner {
-        padding: 0 28px;
+      .work-gallery-viewport { display: none; }
+      .work-gallery-mobile {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 8px 28px 28px;
+        background: var(--ivory);
       }
+      .work-gallery-mobile .work-card {
+        position: static;
+        flex: 0 0 84%;
+        margin: 0;
+        scroll-snap-align: center;
+        transform: none !important;
+        opacity: 1 !important;
+        height: auto;
+        width: auto;
+      }
+      .work-gallery-mobile .work-card-glass {
+        backdrop-filter: blur(14px) saturate(1.15);
+        -webkit-backdrop-filter: blur(14px) saturate(1.15);
+      }
+      .work-gallery-mobile .work-card-glass::after { display: none; }
+      .work-gallery-mobile .work-card-desc { -webkit-line-clamp: 8; }
     }
-
     /* ── NRC METHOD ── */
     #method {
       background: var(--ivory-dark);
@@ -2711,20 +2769,11 @@
         transition: none;
       }
 
-      /* Selected Work constellation: no orbit, no settle stagger, no
-         transform transitions -- every client immediately visible. The
-         module also checks the same media query and never schedules
-         the rAF loop, but these rules make the state safe purely in CSS
-         (the !important on transform wins over .orbiting's translate). */
-      .work-field .work-node,
-      .work-field.settled .work-node,
-      .work-field.settled.orbiting .work-node {
-        opacity: 1;
-        transform: translate(-50%, -50%) !important;
-        transition: none;
-        animation: none !important;
-      }
-      .work-node .nm::after { transition: none; }
+      /* Selected Work gallery: reduced-motion layout is fully defined in
+         the gallery's own @media (prefers-reduced-motion: reduce) block
+         (static wrapped grid, no ring, no rotation, no reflection) --
+         nothing additional needed here. The module also checks the same
+         query directly and never starts its rAF loop. */
     }
   </style>
 </head>
@@ -2973,72 +3022,60 @@
         </div>
         <p class="work-sub work-reveal" style="--work-delay:180ms">A look at early collaborations across brand presence, content, campaigns and digital storytelling.</p>
       </div>
+    </div>
 
-      <div class="work-constellation" id="work-constellation">
+    <div class="work-constellation" id="work-constellation">
 
-        <!-- Semantic source of truth + no-JS fallback. The constellation
-             module reads client data from this list; it is never
-             duplicated in JavaScript. To add a client: append one <li>
-             with a unique data-client-id, a tier (featured|standard|
-             compact) and the next data-order (tens). Optional fields
-             (data-services="A|B", data-case-study-url) are simply
-             omitted when they don't exist. -->
-        <ul class="work-data-list">
-          <li data-client-id="lafee" data-tier="featured" data-order="10">
-            <h3 class="work-data-name">LaFee</h3>
-            <p class="work-data-category">Beauty · Lifestyle</p>
-            <p class="work-data-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
-          </li>
-          <li data-client-id="slides-jewels" data-tier="standard" data-order="20">
-            <h3 class="work-data-name">Slides Jewels</h3>
-            <p class="work-data-category">Jewellery</p>
-            <p class="work-data-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
-          </li>
-          <li data-client-id="nuud" data-tier="featured" data-order="30">
-            <h3 class="work-data-name">NUUD</h3>
-            <p class="work-data-category">Lifestyle · Consumer</p>
-            <p class="work-data-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
-          </li>
-          <li data-client-id="miraki" data-tier="standard" data-order="40">
-            <h3 class="work-data-name">Miraki</h3>
-            <p class="work-data-category">Fashion · Lifestyle</p>
-            <p class="work-data-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
-          </li>
-          <li data-client-id="pusca-jewels" data-tier="standard" data-order="50">
-            <h3 class="work-data-name">Pusca Jewels</h3>
-            <p class="work-data-category">Jewellery</p>
-            <p class="work-data-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
-          </li>
-        </ul>
+      <!-- Semantic source of truth + no-JS fallback. src/portfolio-gallery.js
+           reads client data from this list; it is never duplicated in
+           JavaScript. To add a client: append one <li> with a unique
+           data-client-id and the next data-order (tens). Optional fields
+           (data-services="A|B", data-case-study-url, data-image-src,
+           data-image-alt, data-image-position) are simply omitted when
+           they don't exist yet -- see the gallery module for how each
+           maps onto the card. -->
+      <ul class="work-data-list">
+        <li data-client-id="lafee" data-tier="featured" data-order="10">
+          <h3 class="work-data-name">LaFee</h3>
+          <p class="work-data-category">Beauty · Lifestyle</p>
+          <p class="work-data-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
+        </li>
+        <li data-client-id="slides-jewels" data-tier="standard" data-order="20">
+          <h3 class="work-data-name">Slides Jewels</h3>
+          <p class="work-data-category">Jewellery</p>
+          <p class="work-data-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
+        </li>
+        <li data-client-id="nuud" data-tier="featured" data-order="30">
+          <h3 class="work-data-name">NUUD</h3>
+          <p class="work-data-category">Lifestyle · Consumer</p>
+          <p class="work-data-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
+        </li>
+        <li data-client-id="miraki" data-tier="standard" data-order="40">
+          <h3 class="work-data-name">Miraki</h3>
+          <p class="work-data-category">Fashion · Lifestyle</p>
+          <p class="work-data-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
+        </li>
+        <li data-client-id="pusca-jewels" data-tier="standard" data-order="50">
+          <h3 class="work-data-name">Pusca Jewels</h3>
+          <p class="work-data-category">Jewellery</p>
+          <p class="work-data-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
+        </li>
+      </ul>
 
-        <!-- Enhanced constellation (populated by src/portfolio-constellation.js) -->
-        <div class="work-app" hidden>
-          <div class="work-stage">
-            <div class="work-field-wrap">
-              <div class="work-field" id="work-field" aria-label="Client constellation"></div>
-            </div>
-            <div>
-              <div class="work-panel" id="work-panel">
-                <p class="work-panel-label" id="work-panel-label">Selected Work</p>
-                <p class="work-panel-name" id="work-panel-name">A growing constellation.</p>
-                <p class="work-panel-cats" id="work-panel-cats"></p>
-                <p class="work-panel-desc" id="work-panel-desc">Hover, tap or tab through the constellation to explore each collaboration.</p>
-                <ul class="work-panel-services" id="work-panel-services" hidden></ul>
-                <a class="work-panel-link" id="work-panel-link" href="#" hidden>View case study</a>
-              </div>
-              <div class="work-more" id="work-more" hidden>
-                <p class="work-more-label">More collaborations</p>
-                <ul class="work-more-list" id="work-more-list"></ul>
-              </div>
-            </div>
-          </div>
-          <div class="work-mobile-grid" id="work-mobile-grid"></div>
+      <!-- Enhanced 3D gallery (populated by src/portfolio-gallery.js).
+           Auto-rotating only -- no scroll-linked runway, no sticky
+           positioning; this is a normal-height block in the page flow. -->
+      <div class="work-gallery" hidden>
+        <div class="work-gallery-viewport" id="work-gallery-viewport">
+          <div class="work-gallery-bg" aria-hidden="true"></div>
+          <div class="work-gallery-ring" id="work-gallery-ring" aria-label="Selected work"></div>
         </div>
-
-        <!-- Committed selections announce here; hover previews stay silent. -->
-        <div class="work-sr-only" aria-live="polite" id="work-announcer"></div>
-
+        <div class="work-gallery-mobile" id="work-gallery-mobile" tabindex="0" aria-label="Selected work, scroll horizontally"></div>
       </div>
+
+      <!-- Committed selections announce here; hover previews stay silent. -->
+      <div class="work-sr-only" aria-live="polite" id="work-gallery-announcer"></div>
+
     </div>
   </div>
 
@@ -3241,9 +3278,9 @@
   <!-- THREE.JS -->
 <script type="module">
     import * as THREE from 'three';
-    // Selected Work constellation (self-initializing; reads client data
-    // from the semantic .work-data-list markup).
-    import './src/portfolio-constellation.js';
+    // Selected Work gallery (self-initializing; reads client data from
+    // the semantic .work-data-list markup).
+    import './src/portfolio-gallery.js';
 
     // ────────────────────────────────────────────────
     // HERO SCENE — warm editorial atmosphere
