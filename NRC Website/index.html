@@ -1160,112 +1160,6 @@
       padding-bottom: 8px;
     }
 
-    /* Editorial row list — no cards, no boxes */
-    .work-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Each client row */
-    .work-card {
-      display: grid;
-      grid-template-columns: 56px minmax(0, 1.2fr) minmax(120px, 0.55fr) minmax(0, 1.3fr);
-      gap: 0 52px;
-      align-items: start;
-      padding: 48px 0;
-      border-top: 1px solid rgba(160,130,104,0.14);
-      position: relative;
-    }
-
-    .work-card:last-child {
-      border-bottom: 1px solid rgba(160,130,104,0.14);
-    }
-
-    /* Remove the old 5th-card hack — not needed in row layout */
-    .work-card:nth-child(5) {
-      grid-column: auto;
-      max-width: none;
-    }
-
-    /* Remove old pseudo decorations */
-    .work-card::before,
-    .work-card::after {
-      display: none;
-    }
-
-    /* Index number */
-    .work-index {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.28em;
-      color: rgba(125,140,114,0.70);
-      padding-top: 6px;
-    }
-
-    /* Client name column */
-    .work-client-wrap {
-      min-height: 0;
-      display: flex;
-      align-items: flex-start;
-    }
-
-    .work-client {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(34px, 3.8vw, 56px);
-      font-weight: 300;
-      line-height: 0.96;
-      color: var(--charcoal);
-    }
-
-    /* Category column */
-    .work-type-label {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 8.5px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--charcoal-muted);
-      margin-bottom: 14px;
-      padding-top: 6px;
-    }
-
-    .work-type {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 0;
-    }
-
-    .work-chip {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(125,140,114,0.80);
-      /* No border — plain text for editorial feel */
-      border: none;
-      padding: 0;
-    }
-
-    /* Description column */
-    .work-description {
-      font-family: 'Inter', 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 2.0;
-      color: var(--charcoal-muted);
-      max-width: 380px;
-      margin-top: 0;
-      padding-top: 5px;
-    }
-
-    /* Card head wrapper — retains structure compatibility */
-    .work-card-head {
-      display: contents;
-    }
-
     .work-reveal {
       opacity: 0;
       transform: translateY(18px);
@@ -1280,6 +1174,355 @@
       transform: translateY(0);
     }
 
+    /* ── SELECTED WORK — constellation (Phase 4, prototype-approved) ──
+       Tiered radial field + fixed editorial detail panel. Client data is
+       authored in .work-data-list (the no-JS fallback); the module in
+       src/portfolio-constellation.js enhances it. */
+
+    /* No-JS fallback list: plain editorial rows. Hidden once JS runs. */
+    html.js .work-data-list { display: none; }
+    .work-data-list {
+      list-style: none;
+    }
+    .work-data-list > li {
+      padding: 40px 0;
+      border-top: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-data-list > li:last-child {
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-data-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 38px;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--charcoal);
+    }
+    .work-data-category {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(125,140,114,0.80);
+      margin-top: 12px;
+    }
+    .work-data-description {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 2.0;
+      color: var(--charcoal-muted);
+      max-width: 520px;
+      margin-top: 14px;
+    }
+
+    html:not(.js) .work-app { display: none; }
+
+    .work-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+      gap: 64px;
+      align-items: start;
+    }
+    .layout-tablet .work-stage,
+    .layout-mobile .work-stage {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    .work-field {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 620 / 560;
+      overflow: hidden; /* bounded: nothing escapes the field */
+    }
+    .layout-tablet .work-field {
+      aspect-ratio: 640 / 480;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Hairline orbital guides — same quiet ring motif as the hero */
+    .work-orbit {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(160,130,104,0.14);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .work-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--charcoal);
+      text-align: center;
+      padding: 6px 10px; /* enlarges the hit area beyond the glyphs */
+      line-height: 1.05;
+      max-width: 200px;
+      transition: opacity 0.45s ease, color 0.45s ease;
+    }
+    .work-node .nm { display: inline-block; }
+    .work-node .nm::after { /* selection hairline */
+      content: '';
+      display: block;
+      height: 1px;
+      background: var(--champagne);
+      margin-top: 6px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    .work-node[aria-pressed="true"] .nm::after { transform: scaleX(1); }
+
+    .work-node.tier-featured .nm {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(26px, 2.4vw, 36px);
+      font-weight: 300;
+    }
+    .work-node.tier-standard .nm {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(18px, 1.6vw, 23px);
+      font-weight: 300;
+    }
+    /* Compact tier: dormant until the roster needs a third scale.
+       12px (not smaller) so compact clients read as clients. */
+    .work-node.tier-compact .nm {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #5D6A54; /* deepened sage — 5.0:1 on ivory */
+    }
+
+    .work-field.has-active .work-node { opacity: 0.42; }
+    .work-field.has-active .work-node:hover,
+    .work-field.has-active .work-node:focus-visible,
+    .work-field.has-active .work-node[aria-pressed="true"] { opacity: 1; }
+
+    .work-node:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 3px;
+    }
+
+    /* Settle-in: one-shot entrance from near-center; hands off to drift. */
+    .work-field .work-node {
+      opacity: 0;
+      transform: translate(-50%, -50%) translate(var(--inx, 0px), var(--iny, 0px));
+    }
+    .work-field.measuring .work-node {
+      /* Layout measurement must see base geometry only. */
+      opacity: 1 !important;
+      transform: translate(-50%, -50%) !important;
+      transition: none !important;
+      animation: none !important;
+    }
+    .work-field.settled .work-node {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+      transition:
+        opacity 0.9s cubic-bezier(0.16,1,0.3,1),
+        transform 0.9s cubic-bezier(0.16,1,0.3,1),
+        color 0.45s ease;
+      transition-delay: var(--settle-delay, 0ms), var(--settle-delay, 0ms), 0ms;
+    }
+    .work-field.settled.settle-done .work-node {
+      transition:
+        opacity 0.45s ease,
+        transform 0.9s cubic-bezier(0.16,1,0.3,1),
+        color 0.45s ease;
+      transition-delay: 0ms;
+    }
+    /* Grouped orbital motion (Phase 5): a single JS rAF loop advances one
+       angle per tier group and writes only these two custom properties
+       per node per frame -- transform-only, no layout thrash. Freezing
+       the loop freezes the transform exactly in place (no snap). */
+    .work-field.settled.orbiting .work-node {
+      transform: translate(-50%, -50%) translate(var(--orbit-dx, 0px), var(--orbit-dy, 0px));
+      /* transform: 0s -- each rAF frame writes a new value directly; an
+         eased transform transition would lag behind and read as jitter.
+         Opacity/color keep easing so hover dimming stays smooth. */
+      transition: opacity 0.45s ease, transform 0s linear, color 0.45s ease;
+    }
+
+    /* ── Detail panel ── */
+    .work-panel {
+      border-top: 1px solid rgba(160,130,104,0.30);
+      padding-top: 28px;
+      position: sticky;
+      top: 96px;
+      /* Sized to the tallest real-client content so switching selections
+         never shifts anything beneath the panel. */
+      min-height: 400px;
+    }
+    .layout-tablet .work-panel,
+    .layout-mobile .work-panel { position: static; }
+    .work-panel-label {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--sage);
+    }
+    .work-panel-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 34px;
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--charcoal);
+      margin-top: 18px;
+      min-height: 36px;
+    }
+    .work-panel-cats {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(125,140,114,0.9);
+      margin-top: 10px;
+    }
+    .work-panel-desc {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 2.0;
+      color: var(--charcoal-muted);
+      margin-top: 18px;
+      max-width: 380px;
+    }
+    .work-panel-services {
+      margin-top: 20px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--charcoal-muted);
+      list-style: none;
+    }
+    .work-panel-services li::before { content: '— '; color: var(--bronze); }
+    .work-panel-link {
+      display: inline-block;
+      margin-top: 24px;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--charcoal);
+      text-decoration: none;
+      border-bottom: 1px solid var(--champagne);
+      padding-bottom: 3px;
+    }
+    .work-panel-link[hidden] { display: none; }
+    .work-panel-link:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 3px;
+    }
+
+    /* ── "More collaborations" index (dormant until clients exceed the
+          20-node constellation cap) ── */
+    .work-more {
+      margin-top: 40px;
+      border-top: 1px solid rgba(160,130,104,0.14);
+      padding-top: 22px;
+    }
+    .work-more-label {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--charcoal-muted);
+      margin-bottom: 6px;
+    }
+    .work-more-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      list-style: none;
+    }
+    .work-more-list li { display: flex; align-items: center; }
+    .work-more-list li + li::before {
+      content: '·';
+      margin: 0 10px;
+      color: rgba(160,130,104,0.30);
+    }
+    .work-more-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--charcoal-muted);
+      padding: 14px 4px; /* ≥44px touch target (index is shown on tablet) */
+      min-height: 44px;
+    }
+    .work-more-btn:hover,
+    .work-more-btn[aria-pressed="true"] { color: var(--charcoal); }
+    .work-more-btn[aria-pressed="true"] { border-bottom: 1px solid var(--champagne); }
+    .work-more-btn:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: 2px;
+    }
+
+    /* ── Mobile (≤600px): two-column accordion grid ── */
+    .work-mobile-grid { display: none; }
+    .layout-mobile .work-field-wrap,
+    .layout-mobile .work-panel,
+    .layout-mobile .work-more { display: none; }
+    .layout-mobile .work-mobile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid rgba(160,130,104,0.14);
+    }
+    .work-m-item { display: contents; }
+    .work-m-btn {
+      background: none;
+      border: none;
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+      cursor: pointer;
+      text-align: left;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--charcoal);
+      padding: 16px 12px 16px 0;
+      min-height: 48px;
+    }
+    .work-m-btn[aria-expanded="true"] { color: var(--champagne-dark); }
+    .work-m-btn:focus-visible {
+      outline: 2px solid var(--champagne-dark);
+      outline-offset: -2px;
+    }
+    .work-m-detail {
+      grid-column: 1 / -1;
+      border-bottom: 1px solid rgba(160,130,104,0.14);
+      padding: 6px 0 26px;
+    }
+    .work-m-detail[hidden] { display: none; }
+    .work-m-detail .work-panel-desc { max-width: 100%; }
+
+    /* Visually-hidden live region (committed selections only) */
+    .work-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
     @media (max-width: 960px) {
       #portfolio { padding: 110px 0; }
 
@@ -1292,23 +1535,6 @@
         gap: 24px;
         margin-bottom: 56px;
       }
-
-      .work-card {
-        grid-template-columns: 40px minmax(0, 1fr) minmax(100px, 0.45fr);
-        gap: 0 36px;
-      }
-
-      /* Description wraps below on tablet */
-      .work-description {
-        grid-column: 2 / -1;
-        margin-top: 20px;
-        max-width: 100%;
-      }
-
-      .work-card:nth-child(5) {
-        max-width: 100%;
-        grid-column: auto;
-      }
     }
 
     @media (max-width: 600px) {
@@ -1316,40 +1542,6 @@
 
       .work-inner {
         padding: 0 28px;
-      }
-
-      .work-card {
-        grid-template-columns: 36px 1fr;
-        gap: 0 20px;
-        padding: 38px 0;
-      }
-
-      .work-client-wrap,
-      .work-category,
-      .work-description {
-        grid-column: 2;
-      }
-
-      .work-type {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 6px 16px;
-        margin-top: 14px;
-      }
-
-      .work-chip::after {
-        content: '·';
-        margin-left: 14px;
-        opacity: 0.35;
-      }
-
-      .work-chip:last-child::after {
-        display: none;
-      }
-
-      .work-description {
-        margin-top: 18px;
-        max-width: 100%;
       }
     }
 
@@ -2518,6 +2710,21 @@
         transform: none;
         transition: none;
       }
+
+      /* Selected Work constellation: no orbit, no settle stagger, no
+         transform transitions -- every client immediately visible. The
+         module also checks the same media query and never schedules
+         the rAF loop, but these rules make the state safe purely in CSS
+         (the !important on transform wins over .orbiting's translate). */
+      .work-field .work-node,
+      .work-field.settled .work-node,
+      .work-field.settled.orbiting .work-node {
+        opacity: 1;
+        transform: translate(-50%, -50%) !important;
+        transition: none;
+        animation: none !important;
+      }
+      .work-node .nm::after { transition: none; }
     }
   </style>
 </head>
@@ -2767,89 +2974,70 @@
         <p class="work-sub work-reveal" style="--work-delay:180ms">A look at early collaborations across brand presence, content, campaigns and digital storytelling.</p>
       </div>
 
-      <div class="work-list">
-        <article class="work-card work-reveal" style="--work-delay:260ms">
-          <div class="work-card-head">
-            <div class="work-index">01</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">LaFee</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Beauty and Lifestyle">
-              <span class="work-chip">Beauty</span>
-              <span class="work-chip">Lifestyle</span>
-            </div>
-          </div>
-          <p class="work-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
-        </article>
+      <div class="work-constellation" id="work-constellation">
 
-        <article class="work-card work-reveal" style="--work-delay:340ms">
-          <div class="work-card-head">
-            <div class="work-index">02</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Slides Jewels</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Jewellery">
-              <span class="work-chip">Jewellery</span>
-            </div>
-          </div>
-          <p class="work-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
-        </article>
+        <!-- Semantic source of truth + no-JS fallback. The constellation
+             module reads client data from this list; it is never
+             duplicated in JavaScript. To add a client: append one <li>
+             with a unique data-client-id, a tier (featured|standard|
+             compact) and the next data-order (tens). Optional fields
+             (data-services="A|B", data-case-study-url) are simply
+             omitted when they don't exist. -->
+        <ul class="work-data-list">
+          <li data-client-id="lafee" data-tier="featured" data-order="10">
+            <h3 class="work-data-name">LaFee</h3>
+            <p class="work-data-category">Beauty · Lifestyle</p>
+            <p class="work-data-description">Shaped a more composed brand presence through visual direction and content that makes the offer feel clearer, warmer and easier to trust.</p>
+          </li>
+          <li data-client-id="slides-jewels" data-tier="standard" data-order="20">
+            <h3 class="work-data-name">Slides Jewels</h3>
+            <p class="work-data-category">Jewellery</p>
+            <p class="work-data-description">Built content moments around product detail, styling and intent, giving the brand a more deliberate way to show craft and desirability.</p>
+          </li>
+          <li data-client-id="nuud" data-tier="featured" data-order="30">
+            <h3 class="work-data-name">NUUD</h3>
+            <p class="work-data-category">Lifestyle · Consumer</p>
+            <p class="work-data-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
+          </li>
+          <li data-client-id="miraki" data-tier="standard" data-order="40">
+            <h3 class="work-data-name">Miraki</h3>
+            <p class="work-data-category">Fashion · Lifestyle</p>
+            <p class="work-data-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
+          </li>
+          <li data-client-id="pusca-jewels" data-tier="standard" data-order="50">
+            <h3 class="work-data-name">Pusca Jewels</h3>
+            <p class="work-data-category">Jewellery</p>
+            <p class="work-data-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
+          </li>
+        </ul>
 
-        <article class="work-card work-reveal" style="--work-delay:420ms">
-          <div class="work-card-head">
-            <div class="work-index">03</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">NUUD</h3>
+        <!-- Enhanced constellation (populated by src/portfolio-constellation.js) -->
+        <div class="work-app" hidden>
+          <div class="work-stage">
+            <div class="work-field-wrap">
+              <div class="work-field" id="work-field" aria-label="Client constellation"></div>
+            </div>
+            <div>
+              <div class="work-panel" id="work-panel">
+                <p class="work-panel-label" id="work-panel-label">Selected Work</p>
+                <p class="work-panel-name" id="work-panel-name">A growing constellation.</p>
+                <p class="work-panel-cats" id="work-panel-cats"></p>
+                <p class="work-panel-desc" id="work-panel-desc">Hover, tap or tab through the constellation to explore each collaboration.</p>
+                <ul class="work-panel-services" id="work-panel-services" hidden></ul>
+                <a class="work-panel-link" id="work-panel-link" href="#" hidden>View case study</a>
+              </div>
+              <div class="work-more" id="work-more" hidden>
+                <p class="work-more-label">More collaborations</p>
+                <ul class="work-more-list" id="work-more-list"></ul>
+              </div>
             </div>
           </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Lifestyle and Consumer">
-              <span class="work-chip">Lifestyle</span>
-              <span class="work-chip">Consumer</span>
-            </div>
-          </div>
-          <p class="work-description">Supported a sharper content language that feels more intentional across everyday brand touchpoints, campaign pieces and social storytelling.</p>
-        </article>
+          <div class="work-mobile-grid" id="work-mobile-grid"></div>
+        </div>
 
-        <article class="work-card work-reveal" style="--work-delay:500ms">
-          <div class="work-card-head">
-            <div class="work-index">04</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Miraki</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Fashion and Lifestyle">
-              <span class="work-chip">Fashion</span>
-              <span class="work-chip">Lifestyle</span>
-            </div>
-          </div>
-          <p class="work-description">Created a more considered brand rhythm through content and marketing assets that help the audience understand the feeling behind the brand.</p>
-        </article>
+        <!-- Committed selections announce here; hover previews stay silent. -->
+        <div class="work-sr-only" aria-live="polite" id="work-announcer"></div>
 
-        <article class="work-card work-reveal" style="--work-delay:580ms">
-          <div class="work-card-head">
-            <div class="work-index">05</div>
-            <div class="work-client-wrap">
-              <h3 class="work-client">Pusca Jewels</h3>
-            </div>
-          </div>
-          <div class="work-category">
-            <div class="work-type-label">Category</div>
-            <div class="work-type" aria-label="Jewellery">
-              <span class="work-chip">Jewellery</span>
-            </div>
-          </div>
-          <p class="work-description">Helped frame the brand with a cleaner visual and content presence, giving product-led storytelling a more premium and consistent direction.</p>
-        </article>
       </div>
     </div>
   </div>
@@ -3053,6 +3241,9 @@
   <!-- THREE.JS -->
 <script type="module">
     import * as THREE from 'three';
+    // Selected Work constellation (self-initializing; reads client data
+    // from the semantic .work-data-list markup).
+    import './src/portfolio-constellation.js';
 
     // ────────────────────────────────────────────────
     // HERO SCENE — warm editorial atmosphere
