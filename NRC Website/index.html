@@ -2674,6 +2674,89 @@
       text-decoration: none;
     }
 
+    .audit-success-note {
+      font-family: 'Inter', 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.7;
+      color: rgba(237,229,216,0.36);
+      max-width: 380px;
+      margin-top: 10px;
+    }
+
+    .audit-success-note:empty {
+      display: none;
+    }
+
+    /* Namaste character: decorative, sits below the message, right-aligned.
+       Starts hidden -- .audit-success--visible (added by JS the moment the
+       success state is revealed) drives the fade/rise-in on both the copy
+       and the character, the character trailing by 150ms per spec. */
+    .audit-success-title,
+    .audit-success-body,
+    .audit-success-character {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .audit-success-character {
+      display: block;
+      margin: 22px 0 0 auto;
+      width: clamp(140px, 15vw, 160px);
+      height: auto;
+    }
+
+    @keyframes audit-success-fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Resting state is a plain (non-animation) rule so it stays in effect
+       once the fade-in finishes -- important because the character later
+       swaps to the .is-idle breathing animation, which doesn't touch
+       opacity at all, so opacity must not depend on the fade-in's
+       fill-mode still being "active". */
+    .audit-success--visible .audit-success-title,
+    .audit-success--visible .audit-success-body,
+    .audit-success--visible .audit-success-character {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* fill-mode: backwards only (not "both") -- it applies the 0% keyframe
+       (opacity:0) during the character's 150ms animation-delay so there's
+       no flash of the plain --visible rule's opacity:1 before the fade-in
+       starts, but deliberately does NOT hold the 100% keyframe afterward,
+       so the plain rule above (not the animation) governs the resting
+       state -- that's what keeps opacity correct once .is-idle later
+       swaps in the breathing animation, which never touches opacity. */
+    .audit-success--visible .audit-success-title,
+    .audit-success--visible .audit-success-body {
+      animation: audit-success-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    .audit-success--visible .audit-success-character {
+      animation: audit-success-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+    }
+
+    /* Idle breathing: added by JS once the clip's 'ended' event fires, so
+       the character still reads as alive after the namaste completes
+       without looping the greeting itself. Barely perceptible on purpose. */
+    @keyframes audit-character-breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-0.75px) scale(1.004); }
+    }
+
+    .audit-success-character.is-idle {
+      animation: audit-character-breathe 9s ease-in-out infinite;
+    }
+
+    @media (max-width: 768px) {
+      .audit-success-character {
+        width: clamp(120px, 30vw, 140px);
+      }
+    }
+
     .audit-error-msg {
       display: none;
       margin-top: 18px;
@@ -2733,6 +2816,22 @@
         opacity: var(--character-opacity, 1);
       }
       .hero-char-video {
+        animation: none;
+      }
+
+      /* Namaste success character: no entrance fade-delay, no idle
+         breathing -- JS also skips .play() under this same query, so
+         only the transparent poster (final smiling frame) is ever shown. */
+      .audit-success-title,
+      .audit-success-body,
+      .audit-success-character {
+        opacity: 1;
+        transform: none;
+      }
+      .audit-success--visible .audit-success-title,
+      .audit-success--visible .audit-success-body,
+      .audit-success--visible .audit-success-character,
+      .audit-success-character.is-idle {
         animation: none;
       }
 
@@ -3247,7 +3346,21 @@
 
         <div class="audit-success" id="audit-success" aria-live="polite">
           <p class="audit-success-title">Thank you for reaching out to NRC.</p>
-          <p class="audit-success-body">We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.</p>
+          <p class="audit-success-body">We've received your request. Thank you for choosing NRC. Our team will review the details and reach out within 48 hours. A confirmation email is already on its way.</p>
+          <p class="audit-success-note" id="audit-success-note">We're excited to learn about your brand.</p>
+          <video
+            class="audit-success-character"
+            id="audit-success-character"
+            muted
+            playsinline
+            preload="none"
+            poster="/media/optimized/namaste-character-poster.webp"
+            disablepictureinpicture
+            controlslist="nodownload nofullscreen noremoteplayback"
+            aria-hidden="true"
+          >
+            <source src="/media/optimized/namaste-character.webm" type="video/webm" />
+          </video>
         </div>
       </div>
 
@@ -3681,10 +3794,42 @@
       var form    = document.getElementById('audit-contact-form');
       var success = document.getElementById('audit-success');
       var successBodyEl = document.querySelector('.audit-success-body');
+      var successNoteEl = document.getElementById('audit-success-note');
+      var successCharacter = document.getElementById('audit-success-character');
       var errMsg  = document.getElementById('audit-error-msg');
       var statusEl = document.getElementById('audit-form-status');
       if (!form) return;
       var btn = form.querySelector('.audit-submit');
+
+      // ── SUCCESS CHARACTER (namaste greeting) ──
+      // preload="none" on the <video> so it's never fetched by visitors who
+      // don't submit the form; playback is triggered explicitly here once
+      // the success state is revealed, rather than relying on the
+      // `autoplay` attribute (unreliable on an element that starts inside
+      // a display:none ancestor).
+      var reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      if (successCharacter) {
+        // Attached once, module-level -- guards against duplicate
+        // listeners if the success state is ever reached more than once.
+        successCharacter.addEventListener('ended', function () {
+          successCharacter.classList.add('is-idle');
+        });
+      }
+
+      function playSuccessCharacter() {
+        if (!successCharacter) return;
+        successCharacter.classList.remove('is-idle');
+        if (reducedMotionQuery.matches) return; // poster (final smiling frame) stays visible, nothing to play
+        successCharacter.load(); // resets playback to the start, matters if this ever runs a second time
+        var playPromise = successCharacter.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          // Autoplay can be rejected by the browser or the decode can fail;
+          // either way the poster is already showing, so there's nothing
+          // to recover -- just avoid an uncaught rejection in the console.
+          playPromise.catch(function () {});
+        }
+      }
 
       // ── VALIDATION ──
       // novalidate stays on the <form> so the browser's native popups never
@@ -3891,11 +4036,14 @@
                     // Customer email sent -- internal-notification status
                     // doesn't change what the visitor sees, only console
                     // visibility for us (below).
-                    successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. A confirmation email has been sent to your inbox.";
+                    successBodyEl.textContent = "We've received your request. Thank you for choosing NRC. Our team will review the details and reach out within 48 hours. A confirmation email is already on its way.";
+                    if (successNoteEl) successNoteEl.textContent = "We're excited to learn about your brand.";
                   } else if (result.internalEmailSent) {
                     successBodyEl.textContent = "We've received your discovery call request and will get back to you within 48 hours. We were unable to send the confirmation email, but your request has been recorded successfully.";
+                    if (successNoteEl) successNoteEl.textContent = '';
                   } else {
                     successBodyEl.textContent = 'Your discovery call request has been recorded successfully, and our team will get back to you within 48 hours. We were unable to send the confirmation email at this time.';
+                    if (successNoteEl) successNoteEl.textContent = '';
                   }
                 }
 
@@ -3905,7 +4053,17 @@
 
                 form.reset();
                 form.style.display = 'none';
-                if (success) success.style.display = 'block';
+                if (success) {
+                  success.style.display = 'block';
+                  // Restart the entrance animation even if this somehow
+                  // runs more than once per page load (defensive -- the
+                  // form stays hidden after a first success today, but
+                  // this keeps the reveal correct if that ever changes).
+                  success.classList.remove('audit-success--visible');
+                  void success.offsetWidth;
+                  success.classList.add('audit-success--visible');
+                  playSuccessCharacter();
+                }
                 resetSubmitState();
               } else {
                 handleFailure();
