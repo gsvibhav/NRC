@@ -3353,13 +3353,14 @@
             id="audit-success-character"
             muted
             playsinline
+            webkit-playsinline="true"
             preload="none"
             poster="/media/optimized/namaste-character-poster.webp"
             disablepictureinpicture
             controlslist="nodownload nofullscreen noremoteplayback"
             aria-hidden="true"
           >
-            <source src="/media/optimized/namaste-character.webm" type="video/webm" />
+            <source src="/media/optimized/namaste-character.webm" type="video/webm; codecs=vp9" />
           </video>
         </div>
       </div>
@@ -3817,18 +3818,85 @@
         });
       }
 
+      // iOS Safari note: calling play() synchronously right after load(),
+      // before the element has any buffered data, is unreliable there --
+      // desktop Chromium queues it fine, but WebKit on iOS can silently
+      // no-op. So play() is deferred until 'loadeddata'/'canplay' actually
+      // fires (with a timeout fallback in case neither fires promptly).
       function playSuccessCharacter() {
-        if (!successCharacter) return;
-        successCharacter.classList.remove('is-idle');
-        if (reducedMotionQuery.matches) return; // poster (final smiling frame) stays visible, nothing to play
-        successCharacter.load(); // resets playback to the start, matters if this ever runs a second time
-        var playPromise = successCharacter.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          // Autoplay can be rejected by the browser or the decode can fail;
-          // either way the poster is already showing, so there's nothing
-          // to recover -- just avoid an uncaught rejection in the console.
-          playPromise.catch(function () {});
+        var video = successCharacter;
+        if (!video || reducedMotionQuery.matches) return; // poster (final smiling frame) stays visible, nothing to play
+
+        video.pause();
+        video.classList.remove('is-idle');
+        // Set as JS properties too, not just HTML attributes -- some mobile
+        // browsers re-derive muted state from the attribute at odd times,
+        // and autoplay policies check the live property at play() time.
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+
+        // TODO(temporary): verbose diagnostics for the iOS Safari
+        // playback investigation. Safe to trim once mobile Safari is
+        // confirmed reliable in the field.
+        function logPlaybackIssue(context, extra) {
+          var detail = { readyState: video.readyState, networkState: video.networkState, mediaError: video.error };
+          if (extra) { for (var k in extra) { detail[k] = extra[k]; } }
+          console.warn('Namaste video ' + context, detail);
         }
+
+        function attemptPlay() {
+          try { video.currentTime = 0; } catch (e) {}
+          var playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(function (error) {
+              // Autoplay rejection or decode failure -- the poster (final
+              // smiling frame) is already showing, so there's no broken
+              // video box either way, just log for diagnosis.
+              logPlaybackIssue('play() rejected', { name: error && error.name, message: error && error.message });
+            });
+          }
+        }
+
+        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          attemptPlay();
+          return;
+        }
+
+        var started = false;
+        var fallbackTimer = null;
+
+        function cleanup() {
+          video.removeEventListener('loadeddata', startOnce);
+          video.removeEventListener('canplay', startOnce);
+          video.removeEventListener('error', onError);
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+        }
+
+        function startOnce() {
+          if (started) return;
+          started = true;
+          cleanup();
+          attemptPlay();
+        }
+
+        function onError() {
+          // WebM/VP9-alpha decode can fail outright on some iOS Safari
+          // versions. Don't force play() in that case -- the poster stays
+          // put, same visual as the reduced-motion fallback, never a
+          // broken/blank video element.
+          logPlaybackIssue('decode error, keeping poster', {});
+          started = true; // don't let the fallback timer attempt play() after an error
+          cleanup();
+        }
+
+        video.addEventListener('loadeddata', startOnce, { once: true });
+        video.addEventListener('canplay', startOnce, { once: true });
+        video.addEventListener('error', onError, { once: true });
+
+        video.load(); // resets playback to the start, matters if this ever runs a second time
+
+        fallbackTimer = setTimeout(startOnce, 1500);
       }
 
       // ── VALIDATION ──
