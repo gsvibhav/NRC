@@ -25,3 +25,12 @@ Seven additional skills (`banner-design`, `brand`, `design-system`, `design`, `s
 - `ui-styling` assumes Tailwind/shadcn/Radix; `design-system`/`design`/`banner-design` assume similar non-NRC stacks in places — none of that applies to NRC's vanilla HTML/CSS/JS + Vite + Three.js codebase.
 - `design` and `banner-design`'s AI-generation features require a `GEMINI_API_KEY` and `pip install google-genai pillow` — an external API dependency unique to this bundle.
 - Only invoke a skill from this bundle when explicitly asked for the specific deliverable it produces (e.g., a slide deck, a logo, a banner) — never to silently reinterpret NRC's existing design.
+
+## Hallmark (installed, not approved for automatic NRC use)
+
+`hallmark` (source: `nutlope/hallmark`) was installed via `npx skills add` — the actual skill lives at `.agents/skills/hallmark/`, symlinked into `.claude/skills/hallmark/`. It is a design-authority skill (page macrostructures, nav/footer archetypes, OKLCH theme catalog, its own `tokens.css`/`.hallmark/log.json`/`design.md`) with `build`/`audit`/`redesign`/`study` verbs. Not part of the approved NRC selection above and not curated.
+
+- Do not use it as an automatic or default design authority for NRC website work — `redesign-existing-projects` remains primary; never combine competing aesthetic directions automatically.
+- Do not let it introduce its own macrostructure/theme/nav/footer picks, or write `tokens.css`/`design.md`, in a way that overrides or fragments NRC's established champagne/ivory/sage/bronze/charcoal/dark palette, typography, or single-file vanilla HTML/CSS/JS + Vite + Three.js stack.
+- Only invoke it when explicitly asked by name or for one of its specific verbs. Its `audit` verb is read-only (no edits) and is the lowest-risk entry point if ever exercised on NRC.
+- See `skills.md` for full detail, including its different install mechanism (the `skills` CLI, not a manual copy) and its optional third-party image-generation tier (no API keys configured in this project).
