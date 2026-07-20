@@ -144,7 +144,10 @@
       padding: 22px 64px;
       background: transparent;
       border-bottom: 1px solid transparent;
-      transition: background 0.6s ease, border-color 0.6s ease, backdrop-filter 0.6s ease;
+      transform: translateY(0);
+      transition: background 0.6s ease, border-color 0.6s ease, backdrop-filter 0.6s ease,
+                  transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
     }
 
     nav.scrolled {
@@ -152,6 +155,13 @@
       backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
       border-bottom-color: var(--glass-border);
+    }
+
+    /* Scroll-aware hide/reveal: additive to .scrolled above -- the glass
+       background transition keeps running independently of this one. Driven
+       by the NAV SCROLL STATE controller (see script at the end of body). */
+    nav.nav-hidden {
+      transform: translateY(calc(-100% - 8px));
     }
 
     /* Solid fallback where backdrop-filter isn't supported */
@@ -183,6 +193,9 @@
     @media (prefers-reduced-motion: reduce) {
       nav {
         transition: none;
+      }
+      nav.nav-hidden {
+        transform: none;
       }
     }
 
@@ -3680,16 +3693,74 @@
     })();
 
     // ────────────────────────────────────────────────
-    // NAV SCROLL STATE
+    // NAV SCROLL STATE — glass background + hide/reveal
+    // Single passive scroll listener, rAF-gated. Toggles the .scrolled
+    // glass background, and additively hides the nav on meaningful downward
+    // scroll / reveals it on meaningful upward scroll once past the top
+    // guard. Mobile-menu open state and keyboard focus both force it back
+    // visible (see below).
     // ────────────────────────────────────────────────
     (function() {
       const nav = document.getElementById('main-nav');
-      const onScroll = () => {
-        if (window.scrollY > 48) nav.classList.add('scrolled');
-        else nav.classList.remove('scrolled');
-      };
+
+      const TOP_THRESHOLD = 96;    // px -- header always shown inside this zone
+      const DELTA_THRESHOLD = 8;   // px -- ignore sub-threshold jitter
+
+      let lastY = window.scrollY;
+      let menuOpen = false;
+      let ticking = false;
+
+      function applyState(y) {
+        nav.classList.toggle('scrolled', y > 48);
+
+        if (menuOpen || y <= TOP_THRESHOLD) {
+          nav.classList.remove('nav-hidden');
+          lastY = y;
+          return;
+        }
+
+        const delta = y - lastY;
+        if (delta > DELTA_THRESHOLD) {
+          nav.classList.add('nav-hidden');
+          lastY = y;
+        } else if (delta < -DELTA_THRESHOLD) {
+          nav.classList.remove('nav-hidden');
+          lastY = y;
+        }
+        // else: within the jitter band -- leave lastY and the class alone so
+        // small same-direction moves can't silently accumulate past the
+        // threshold one sub-threshold step at a time.
+      }
+
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+          applyState(window.scrollY);
+          ticking = false;
+        });
+      }
+
       window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll(); // run once on load
+      applyState(window.scrollY); // run once on load -- handles refresh-while-scrolled, direct anchor landings, and bfcache restores
+
+      // Keyboard users tabbing (or shift-tabbing) into any nav child must
+      // never land on an invisible off-screen nav.
+      nav.addEventListener('focusin', function () {
+        nav.classList.remove('nav-hidden');
+      });
+
+      // Mobile-menu integration: listens for custom events dispatched by the
+      // MOBILE NAV MENU controller below instead of a shared global -- forces
+      // the nav visible for the duration the panel is open, and simply lets
+      // the next real scroll re-evaluate normally once it closes (no snap).
+      nav.addEventListener('nav:menuopen', function () {
+        menuOpen = true;
+        applyState(window.scrollY);
+      });
+      nav.addEventListener('nav:menuclose', function () {
+        menuOpen = false;
+      });
     })();
 
     // ────────────────────────────────────────────────
@@ -3709,6 +3780,8 @@
         panel.classList.add('open');
         trigger.setAttribute('aria-expanded', 'true');
         trigger.textContent = 'Close';
+        // Tells the NAV SCROLL STATE controller to pin the header visible.
+        nav.dispatchEvent(new CustomEvent('nav:menuopen'));
       }
 
       function closeMenu(returnFocus) {
@@ -3717,6 +3790,7 @@
         trigger.setAttribute('aria-expanded', 'false');
         trigger.textContent = 'Menu';
         if (returnFocus) trigger.focus();
+        nav.dispatchEvent(new CustomEvent('nav:menuclose'));
       }
 
       trigger.addEventListener('click', function () {
