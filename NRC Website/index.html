@@ -499,28 +499,38 @@
       background: var(--ivory);
     }
 
-    #hero-canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-    }
-
-    /* ── HERO CHARACTER ── */
+    /* ── HERO CHARACTER — male mascot: walks in from the left, emerges
+       from behind the headline, waves once, settles into a calm final
+       pose. z-index 1 sits below .hero-content's z-index 2/3, so the real
+       headline/subhead/CTA text occludes him during the entrance -- no
+       duplicate text layer needed. */
     .hero-character {
       position: absolute;
       right: clamp(10px, 3vw, 48px);
       bottom: 0;
       width: min(46vw, 620px);
       height: 96%;
-      z-index: 2;
+      z-index: 1;
       pointer-events: none;
       display: flex;
       align-items: flex-end;
       justify-content: center;
       overflow: hidden;
-      opacity: 0;
-      --character-opacity: 1;
-      animation: char-entrance 1.25s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+      opacity: 1;
+      /* Pre-entrance rest state -- off-screen left. The lifecycle script
+         adds .is-entering (in the same tick it calls video.play()) to
+         start the translateX animation, so the box only starts sliding
+         once the video is actually ready to render frames -- avoids an
+         empty box visibly sliding in before playback begins. */
+      transform: translateX(-160vw);
+    }
+    .hero-character.is-entering {
+      animation: hero-character-entrance 3.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes hero-character-entrance {
+      from { transform: translateX(-160vw); }
+      to   { transform: translateX(0); }
     }
 
     .hero-char-video {
@@ -531,25 +541,10 @@
       max-width: 100%;
       object-fit: contain;
       object-position: bottom center;
-      -webkit-mask-image: radial-gradient(ellipse 54% 76% at 55% 52%, #000 58%, rgba(0,0,0,0.68) 72%, transparent 100%);
-      mask-image: radial-gradient(ellipse 54% 76% at 55% 52%, #000 58%, rgba(0,0,0,0.68) 72%, transparent 100%);
-      transform-origin: 50% 99%;
-      animation: char-breathe 7.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       filter:
         drop-shadow(-18px 8px 44px rgba(184,151,128,0.12))
         drop-shadow(0 34px 54px rgba(42,36,32,0.11));
       will-change: transform;
-    }
-
-    /* Slow breathing only — calm, barely perceptible */
-    @keyframes char-breathe {
-      0%, 100% { transform: translateY(0) scaleY(1); }
-      50%      { transform: translateY(-5px) scaleY(1.003); }
-    }
-
-    @keyframes char-entrance {
-      from { opacity: 0; transform: translateX(26px) translateY(10px); }
-      to   { opacity: var(--character-opacity); transform: translateX(0) translateY(0); }
     }
 
     /* Subtle warm halo behind the character — atmospheric depth */
@@ -586,11 +581,43 @@
       pointer-events: none;
     }
 
+    /* Final-pose hold target. A <video poster> only ever shows BEFORE
+       playback starts; once ended, browsers keep displaying the video's
+       last decoded frame, not the poster. Swapping .poster post-hoc has
+       no effect. So the "hold with no reset flash" requirement is done
+       the reliable way: hide the <video>, reveal this <img> (same source
+       frame) underneath on the 'ended' event -- see the lifecycle script.
+       Sits absolutely so it overlaps the video exactly instead of sitting
+       beside it in the flex row; bottom:0 + left:50%/translateX(-50%)
+       reproduces the video's own flex-end + justify-content:center
+       positioning exactly, so the swap is pixel-aligned with no float. */
+    .hero-character-final-pose {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 92%;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      object-position: bottom center;
+      filter:
+        drop-shadow(-18px 8px 44px rgba(184,151,128,0.12))
+        drop-shadow(0 34px 54px rgba(42,36,32,0.11));
+      opacity: 0;
+      pointer-events: none;
+    }
+    .hero-character-final-pose.is-visible {
+      opacity: 1;
+    }
+    .hero-char-video.is-ended {
+      opacity: 0;
+    }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 1024px) {
       .hero-character {
         width: 48%;
-        --character-opacity: 0.88;
       }
     }
 
@@ -601,9 +628,17 @@
       .hero-character {
         width: 72%;
         right: -18%;
-        --character-opacity: 0.28;
-        pointer-events: none;
       }
+    }
+
+    /* 481-768px simplified treatment (JS adds this class at that width).
+       No walk-in sweep, no CSS transform at all: he's simply present in
+       his rest position, faded straight to the held final pose -- the
+       full entrance's translateX sweep crosses the outline CTA's
+       transparent interior at this width and reads as unintentional. */
+    .hero-character.is-simplified {
+      transform: none;
+      animation: none;
     }
 
     @media (max-width: 480px) {
@@ -2808,15 +2843,14 @@
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
 
-      /* Hero character: drop the entrance slide-in and the infinite
-         breathing loop, but keep the per-breakpoint opacity it would
-         have settled into. */
+      /* Hero character: no walk-in, no CSS entrance transform -- JS also
+         skips .load()/.play() entirely under this same query (see the
+         lifecycle script), so only the transparent initial poster's swap
+         to the final settled-pose poster is what a reduced-motion visitor
+         ever sees, already in its rest position. */
       .hero-character {
         animation: none;
-        opacity: var(--character-opacity, 1);
-      }
-      .hero-char-video {
-        animation: none;
+        transform: none;
       }
 
       /* Namaste success character: no entrance fade-delay, no idle
@@ -2904,7 +2938,6 @@
 
   <!-- HERO -->
   <section id="hero">
-    <canvas id="hero-canvas"></canvas>
     <div class="hero-content">
       <p class="hero-eyebrow">NRC &nbsp;·&nbsp; Brand Growth Studio</p>
       <h1 class="hero-headline">
@@ -2923,26 +2956,42 @@
       </p>
     </div>
 
-    <!-- HERO CHARACTER — trusted guide, embodying Dharma · Artha · Kama · Moksha -->
-    <div class="hero-character" aria-hidden="true">
+    <!-- HERO CHARACTER — male mascot: walks in from the left, emerges from
+         behind the headline, waves once, settles into a calm final pose.
+         preload="none" + no autoplay attribute means nothing is fetched
+         until the lifecycle script explicitly calls .load()/.play() on
+         page ready. Sits at a lower z-index than .hero-content (see CSS)
+         so the headline occludes him during the entrance.
+         NOTE: poster/img src are intentionally omitted here and set by JS
+         instead -- a static poster="" or <img src=""> is fetched by the
+         browser immediately regardless of preload, which would cost an
+         unnecessary request before the hero is even revealed. -->
+    <div class="hero-character" aria-hidden="true" id="hero-character">
       <video
         class="hero-char-video"
-        autoplay
+        id="hero-character-video"
         muted
-        loop
         playsinline
-        preload="auto"
-        poster="assets/hero-character.png"
+        webkit-playsinline="true"
+        preload="none"
         disablepictureinpicture
         controlslist="nodownload nofullscreen noremoteplayback"
       >
-        <!-- Source selection runs once at element init, not on resize --
-             matches the reliable range the previous single-source
-             media query already relied on. Below 481px .hero-character
-             is display:none, so no source is offered there. -->
-        <source src="/media/optimized/hero-character-mobile.mp4" type="video/mp4" media="(min-width: 481px) and (max-width: 768px)" />
-        <source src="/media/optimized/hero-character-desktop.mp4" type="video/mp4" media="(min-width: 769px)" />
+        <source src="/media/optimized/mascot-character.webm" type="video/webm; codecs=vp9" />
       </video>
+      <!-- Final-pose hold target. A <video poster> only ever shows BEFORE
+           playback starts; once ended, browsers keep displaying the video's
+           last decoded frame, not the poster. Swapping .poster post-hoc has
+           no effect. So the "hold with no reset flash" requirement is done
+           the reliable way: hide the <video>, reveal this <img> (same
+           source frame) underneath on the 'ended' event -- see the
+           lifecycle script. Starts hidden, src set by JS. -->
+      <img
+        class="hero-char-video hero-character-final-pose"
+        id="hero-character-final-pose"
+        alt=""
+        aria-hidden="true"
+      />
     </div>
   </section>
 
@@ -3389,151 +3438,173 @@
     </div>
   </footer>
 
-  <!-- THREE.JS -->
+  <!-- HERO CHARACTER -->
 <script type="module">
-    import * as THREE from 'three';
     // Selected Work gallery (self-initializing; reads client data from
     // the semantic .work-data-list markup).
     import './src/portfolio-gallery.js';
 
     // ────────────────────────────────────────────────
-    // HERO SCENE — warm editorial atmosphere
-    // Single renderer, camera and mote field; character remains the primary visual.
+    // HERO CHARACTER — full playback lifecycle for the male mascot.
+    //
+    // Behaviour:
+    //  - deferred play (loadeddata/canplay, not immediately after load() --
+    //    the same iOS Safari fix used by the discovery-form success
+    //    animation elsewhere on this page) with a timeout fallback
+    //  - entrance CSS class added in the same tick as play(), so the
+    //    translateX slide and actual playback start together
+    //  - a minimum 1050ms delay before the entrance starts, so he crosses
+    //    the headline's zone only after the HERO ENTRANCE ANIMATION below
+    //    has revealed the actual text (680-980ms) -- otherwise he'd sweep
+    //    past empty space with nothing there yet to occlude him
+    //  - plays once, never loops, never replays on re-entering the viewport
+    //  - IntersectionObserver pauses mid-animation playback when the hero
+    //    scrolls out of view and resumes from the same point (not restarted)
+    //  - visibilitychange pauses/resumes the same way for a backgrounded tab
+    //  - reduced-motion: never loads/plays at all -- final pose shown
+    //    immediately, in its rest position (see the reduced-motion CSS)
+    //  - autoplay rejection or decode error: falls back to the final pose
+    //    rather than leaving a blank area
+    //  - 481-768px: a simplified final-pose-only treatment (no walk-in) --
+    //    the full entrance's translateX sweep crosses the outline CTA's
+    //    transparent interior at this width and reads as unintentional
+    //  - 'ended': swaps to a separate <img> holding the same final frame
+    //    (a <video poster> does not redisplay after playback ends, so this
+    //    is the reliable way to hold the pose with no reset flash)
     // ────────────────────────────────────────────────
-    (function() {
-      const canvas = document.getElementById('hero-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      renderer.setClearColor(0xF5F0E8, 1);
+    (function () {
+      const container = document.getElementById('hero-character');
+      const video = document.getElementById('hero-character-video');
+      const finalPoseImg = document.getElementById('hero-character-final-pose');
+      if (!container || !video || !finalPoseImg) return;
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 160);
-      camera.position.set(0, 0, 26);
+      // <=480px: the character is display:none in CSS and never shown --
+      // don't fetch anything for it either (not even the posters). Checked
+      // once at setup, same convention as the 481-768px check below.
+      if (window.innerWidth <= 480) return;
 
-      scene.fog = new THREE.FogExp2(0xF5F0E8, 0.014);
+      // Set here, not statically in markup -- see markup note on why a
+      // static poster/img-src would cost an unnecessary early request.
+      video.poster = '/media/optimized/mascot-character-poster-initial.webp';
+      finalPoseImg.src = '/media/optimized/mascot-character-poster.webp';
 
-      // Minimal lighting — atmospheric warmth only.
-      scene.add(new THREE.AmbientLight(0xDDD4C8, 0.55)); // warm paper ambient
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-      // Soft warm glow on the right — illuminates where character stands
-      const warmGlow = new THREE.PointLight(0xB89780, 0.35, 36); // logo champagne
-      warmGlow.position.set(9, 1, 7);
-      scene.add(warmGlow);
-
-      // Subtle sage-cool fill on the left — editorial balance
-      const coolFill = new THREE.PointLight(0x96A78B, 0.18, 28); // logo sage
-      coolFill.position.set(-10, 3, 5);
-      scene.add(coolFill);
-
-      // ── SOFT PRESENTATION RINGS ── quiet framing around the character area
-      const ringGroup = new THREE.Group();
-      ringGroup.position.set(9.8, -0.7, -12);
-      ringGroup.rotation.set(Math.PI / 2.7, 0.03, -0.08);
-      scene.add(ringGroup);
-
-      function makeRing(radius, thickness, color, opacity, scaleX, scaleY) {
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(radius, radius + thickness, 160),
-          new THREE.MeshBasicMaterial({
-            color,
-            transparent: true,
-            opacity,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-          })
-        );
-        ring.scale.set(scaleX, scaleY, 1);
-        ringGroup.add(ring);
-        return ring;
+      function showFinalPoseNow() {
+        video.classList.add('is-ended');
+        finalPoseImg.classList.add('is-visible');
       }
 
-      const ringA = makeRing(8.8,  0.025, 0xB89780, 0.09,  1.18, 0.58); // champagne
-      const ringB = makeRing(11.5, 0.018, 0x7D8C72, 0.06,  1.22, 0.54); // sage
-      const ringC = makeRing(14.2, 0.014, 0xEDE7DB, 0.045, 1.12, 0.50); // ivory
-
-      // ── AMBIENT MOTE FIELD ── subtle, widely scattered
-      const COUNT = 72;
-      const pPos  = new Float32Array(COUNT * 3);
-      const pCol  = new Float32Array(COUNT * 3);
-      const c1 = new THREE.Color(0xB89780); // logo champagne (R/c letterform)
-      const c2 = new THREE.Color(0xEDE7DB); // warm ivory
-      const c3 = new THREE.Color(0x7D8C72); // logo sage (N letterform)
-
-      for (let i = 0; i < COUNT; i++) {
-        // Weighted toward right (where character is)
-        pPos[i*3]   = (Math.random() - 0.2) * 52 + 5;
-        pPos[i*3+1] = (Math.random() - 0.5)  * 38;
-        pPos[i*3+2] = (Math.random() - 0.5)  * 28;
-        const r = Math.random();
-        const c = r < 0.45 ? c1 : r < 0.76 ? c2 : c3;
-        pCol[i*3]   = c.r;
-        pCol[i*3+1] = c.g;
-        pCol[i*3+2] = c.b;
+      if (reducedMotionQuery.matches) {
+        // Never touch the network for the video at all under reduced
+        // motion -- go straight to the held final pose, already in the
+        // (untransformed, per the reduced-motion CSS) rest position.
+        showFinalPoseNow();
+        return;
       }
-      const pGeo = new THREE.BufferGeometry();
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      pGeo.setAttribute('color',    new THREE.BufferAttribute(pCol, 3));
-      const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
-        size: 0.042,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.22,
-        sizeAttenuation: true,
-      }));
-      scene.add(particles);
 
-      // ── MOUSE ── very gentle parallax
-      let mouse = { x: 0, y: 0 };
-      document.addEventListener('mousemove', e => {
-        mouse.x = (e.clientX / window.innerWidth  - 0.5) * 2;
-        mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
-      }, { passive: true });
-
-      // ── RESIZE ──
-      function resize() {
-        const w = canvas.clientWidth, h = canvas.clientHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+      // 481-768px: tested both the full walk-in and a simplified
+      // final-pose-only treatment. The full entrance's translateX sweep
+      // crosses directly through the outline CTA's transparent interior
+      // at this width band -- not actually blocked (z-index keeps the
+      // button's own text/border in front) but reads as unintentional.
+      // The simplified treatment reads as deliberate and doesn't compete
+      // with the copy, so it's what ships here. Checked once at setup
+      // (matches the project's existing convention of not re-deriving
+      // responsive character choices on resize).
+      if (window.innerWidth > 480 && window.innerWidth <= 768) {
+        container.classList.add('is-simplified');
+        showFinalPoseNow();
+        return;
       }
-      resize();
-      window.addEventListener('resize', resize);
 
-      // ── ANIMATION ── minimal, calm
-      // Reduced-motion: one MediaQueryList built once (not per-frame), read
-      // as a cached boolean each frame -- freezes the decorative drift
-      // (camera parallax, particles, rings, glow) while still rendering
-      // the scene every frame. A 'change' listener picks up the user
-      // toggling the OS setting mid-session.
-      let t = 0;
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-      function animate() {
-        requestAnimationFrame(animate);
+      video.addEventListener('ended', showFinalPoseNow, { once: true });
 
-        if (!reduceMotion.matches) {
-          t += 0.002;
+      function logPlaybackIssue(context, extra) {
+        var detail = { readyState: video.readyState, networkState: video.networkState, mediaError: video.error };
+        if (extra) { for (var k in extra) { detail[k] = extra[k]; } }
+        console.warn('Hero character video ' + context, detail);
+      }
 
-          // Very gentle camera drift — won't compete with the character.
-          camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.012;
-          camera.position.y += (-mouse.y * 0.3 - camera.position.y) * 0.012;
-          camera.lookAt(0, 0, 0);
+      function reallyPlay() {
+        container.classList.add('is-entering'); // starts the translateX slide in the same tick
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function (error) {
+            // Autoplay blocked or decode failed: fall back to the held
+            // final pose rather than an empty transparent box.
+            logPlaybackIssue('play() rejected, falling back to final pose', { name: error && error.name, message: error && error.message });
+            showFinalPoseNow();
+          });
+        }
+      }
 
-          // Slow atmospheric drift.
-          particles.rotation.y = t * 0.007;
-          particles.rotation.x = t * 0.003;
+      var MIN_ENTRANCE_DELAY_MS = 1050;
+      var pageT0 = Date.now();
+      function attemptPlay() {
+        var remaining = MIN_ENTRANCE_DELAY_MS - (Date.now() - pageT0);
+        if (remaining > 0) {
+          setTimeout(reallyPlay, remaining);
+        } else {
+          reallyPlay();
+        }
+      }
 
-          ringGroup.rotation.z = -0.08 + Math.sin(t * 0.38) * 0.006;
-          ringA.material.opacity = 0.09 + Math.sin(t * 0.48) * 0.012;
-          ringB.material.opacity = 0.06 + Math.sin(t * 0.36 + 1.2) * 0.008;
-          ringC.material.opacity = 0.046 + Math.sin(t * 0.32 + 2.4) * 0.006;
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        attemptPlay();
+      } else {
+        var started = false;
+        var fallbackTimer = null;
 
-          // Warm glow breathes with the character — subtle sync.
-          warmGlow.intensity = 0.34 + Math.sin(t * 0.5) * 0.045;
+        function cleanup() {
+          video.removeEventListener('loadeddata', startOnce);
+          video.removeEventListener('canplay', startOnce);
+          video.removeEventListener('error', onError);
+          if (fallbackTimer) clearTimeout(fallbackTimer);
+        }
+        function startOnce() {
+          if (started) return;
+          started = true;
+          cleanup();
+          attemptPlay();
+        }
+        function onError() {
+          logPlaybackIssue('decode error, falling back to final pose', {});
+          started = true;
+          cleanup();
+          showFinalPoseNow();
         }
 
-        renderer.render(scene, camera);
+        video.addEventListener('loadeddata', startOnce, { once: true });
+        video.addEventListener('canplay', startOnce, { once: true });
+        video.addEventListener('error', onError, { once: true });
+        video.load();
+        fallbackTimer = setTimeout(startOnce, 1500);
       }
-      animate();
+
+      // Pause (don't reset) while off-screen or the tab is hidden; resume
+      // from the same point. Never applies once 'ended' has already fired --
+      // once he's settled, there's nothing left to pause/resume.
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (video.classList.contains('is-ended')) return;
+          if (entry.isIntersecting) {
+            if (video.paused && video.currentTime > 0) video.play().catch(function () {});
+          } else {
+            if (!video.paused) video.pause();
+          }
+        });
+      }, { threshold: 0 });
+      io.observe(container.closest('#hero') || container);
+
+      document.addEventListener('visibilitychange', function () {
+        if (video.classList.contains('is-ended')) return;
+        if (document.visibilityState === 'hidden') {
+          if (!video.paused) video.pause();
+        } else if (video.currentTime > 0) {
+          video.play().catch(function () {});
+        }
+      });
     })();
 
     // ────────────────────────────────────────────────
