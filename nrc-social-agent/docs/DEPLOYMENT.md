@@ -196,18 +196,18 @@ passed through this workflow — this workflow only gets the code there; it
 never supplies runtime configuration, and no runtime application secret
 is ever passed to GitHub Actions.
 
-### 3. A prerequisite this workflow cannot satisfy on its own
+### 3. Commit history prerequisite (resolved, Milestone 11D.2)
 
 `git subtree split` operates on this repository's actual Git commit
-history. As of this document, `nrc-social-agent/` has never been
-committed to this monorepo at all — a real run's "Generate nrc-social-agent
-subtree commit" step will fail with an explicit error until at least one
-commit under `nrc-social-agent/` exists on the branch being deployed.
-This is expected and by design — this milestone does not commit anything
-on your behalf (see the standing "do not commit" constraint this project
-operates under). Once `nrc-social-agent/` is committed normally (as any
-other change to this repository would be), the subtree split works
-exactly as validated below.
+history — it produced `fatal: no new revisions were found` until
+`nrc-social-agent/` was actually committed to this monorepo (it had never
+been, through Milestone 11D.1). Milestone 11D.2 committed the full
+application (`feat(social-agent): add NRC social publishing agent`) and
+the deployment workflow (`ci(social-agent): add subtree deployment
+workflow`) to the `sg-initial` branch and pushed it to `origin` — `git
+subtree split --prefix=nrc-social-agent` now succeeds and is confirmed
+deterministic (the same commit SHA before and after the push). This
+prerequisite no longer blocks a dry run or a real deployment.
 
 ### 4. Run the first dry run (do this before touching `main`)
 

@@ -13,19 +13,22 @@ this milestone's code:
 
 ## Current milestone
 
-**Phase 1 / Milestone 11D.1 — Deploy Only `nrc-social-agent/` to
-JustRunMy.App.** This repository is a monorepo with three independent
-projects sharing one `main` branch. `.github/workflows/deploy-social-agent.yml`
-(at the monorepo root) now uses Git's native
-`git subtree split --prefix=nrc-social-agent` to push **only** this
-project's own content to JustRunMy.App, with that content at the
-deployment repository's *root* — never the whole monorepo, never a
-nested `nrc-social-agent/` subdirectory, and never "NRC Website/" or
-"nrc-ai-agents/". Both a dry run and a real run generate and validate
-this subtree commit (confirming `Dockerfile`/`requirements.txt`/`src`
-are present at its root and the sibling projects are absent); only the
-actual push to JustRunMy.App is skipped on a dry run. **No real
-deployment has been run through it yet** — see
+**Phase 1 / Milestone 11D.2 — Committed and Pushed to `sg-initial`.**
+`nrc-social-agent/` was, until this milestone, entirely untracked in this
+monorepo's Git history — meaning `git subtree split --prefix=nrc-social-agent`
+(added in Milestone 11D.1) could not yet succeed. This milestone
+committed the full application
+(`feat(social-agent): add NRC social publishing agent`, 207 files) and
+the deployment workflow
+(`ci(social-agent): add subtree deployment workflow`) as two separate
+commits on the `sg-initial` branch, and pushed them to `origin`. A secret
+scan across the full commit scope found no real credentials anywhere.
+Post-commit, `git subtree split --prefix=nrc-social-agent` was confirmed
+to succeed and to be deterministic (same commit SHA before and after the
+push), and a Docker build against the actual extracted subtree tree was
+confirmed to succeed. **No push to JustRunMy.App, and no real
+deployment, was made** — that remains a separate, later, explicitly
+authorized step; see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#github-actions-deployment-pipeline-milestones-11d-11d1)
 for the full setup and first-run walkthrough, including a verified (not
 assumed) explanation of why ordinary forward deployments fast-forward
