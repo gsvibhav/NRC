@@ -1,0 +1,226 @@
+name: Deploy Social Agent to Production (JustRunMy.App)
+
+# Deploys ONLY nrc-social-agent/ to JustRunMy.App -- not the rest of this
+# monorepo ("NRC Website/", "nrc-ai-agents/"). This repository has three
+# independent projects sharing one `main` branch; JustRunMy.App must
+# receive a deployment repository whose root looks like nrc-social-agent/
+# itself (Dockerfile, requirements.txt, src/, ... at the top level), never
+# a nested nrc-social-agent/ subdirectory and never the sibling projects.
+#
+# This is done with Git's native `git subtree split --prefix=nrc-social-agent`
+# (see the "Generate nrc-social-agent subtree commit" step below), which
+# reconstructs a synthetic commit history containing only the tree at that
+# prefix -- never a second, separately-maintained deployment repository,
+# and never a permanent rewrite of this repository's own history (the
+# split commit is generated fresh in the CI runner's disposable checkout
+# and only ever pushed to JustRunMy.App's remote, never back to `origin`).
+#
+# JustRunMy.App itself builds and runs the Docker image from that Git
+# push (its own Git-based deployment model). This workflow's own
+# "Build Docker image" step is CI validation only -- confirming the
+# image still builds cleanly, from exactly what will be deployed -- it
+# never pushes an image anywhere itself.
+#
+# Deployment is deliberately independent of Instagram operational
+# validation. This workflow never calls /instagram_status, never calls
+# /instagram_test_publish, never validates Meta credentials, and never
+# touches Telegram -- it only gets the application's code running on
+# JustRunMy.App. Whether Instagram publishing actually works there is a
+# separate, deliberately manual, operator-authorized step -- see
+# nrc-social-agent/docs/INSTAGRAM_LIVE_VALIDATION.md.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Only re-deploy when something under nrc-social-agent/ (or this
+      # workflow file itself) actually changed -- a push that only
+      # touches "NRC Website/" or "nrc-ai-agents/" must never trigger a
+      # social-agent deployment.
+      - "nrc-social-agent/**"
+      - ".github/workflows/deploy-social-agent.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run -- run tests, build the Docker image, and validate the subtree split, but skip the actual Git deployment"
+        type: boolean
+        default: true
+        required: true
+
+# Only one deployment runs at a time; a newer push cancels an in-flight
+# older one rather than racing it -- same philosophy as
+# deploy-production.yml (the NRC Website's own workflow). A single group
+# covering both push and workflow_dispatch runs mirrors that workflow's
+# own behavior exactly, including the same tradeoff it already accepts:
+# a manually-triggered dry run can cancel an in-flight real deployment.
+# If that tradeoff ever needs to change, change it identically in both
+# workflows, not just this one.
+concurrency:
+  group: nrc-social-agent-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.0
+        with:
+          # Full history is REQUIRED here, not just preferred:
+          # `git subtree split` reconstructs a synthetic commit history
+          # containing only the tree at --prefix from every commit that
+          # ever touched it. A shallow checkout would only see commits
+          # within the shallow window, producing an incomplete and
+          # non-deterministic split. Verified directly in a sandbox
+          # before writing this workflow: with full history, the same
+          # prefix split from a completely fresh, independent clone
+          # (no local subtree-split cache carried over -- exactly how
+          # every GitHub Actions run starts) produces the exact same
+          # commit SHA every time. That determinism is what makes
+          # ordinary forward deployments fast-forward safely below,
+          # without ever needing --force.
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12" # must match the Dockerfile's `FROM python:3.12-slim`
+          cache: "pip"
+          cache-dependency-path: nrc-social-agent/requirements-dev.txt
+
+      - name: Install dependencies
+        working-directory: nrc-social-agent
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests (pytest)
+        working-directory: nrc-social-agent
+        run: pytest
+
+      # No linter or formatter is invoked here because none is configured
+      # in this repository (no ruff.toml/.flake8/pyproject.toml lint
+      # section/pre-commit config exists under nrc-social-agent/ as of
+      # this workflow's authoring) -- inventing one here would validate
+      # against rules the codebase was never actually written to satisfy.
+      # If a linter/formatter is ever added to the repository, add its
+      # corresponding step here, next to this comment.
+
+      - name: Build Docker image (CI validation only -- never pushed anywhere)
+        working-directory: nrc-social-agent
+        run: docker build -t nrc-social-agent:ci .
+
+      # `git subtree split` refuses to run from anywhere but the
+      # repository's toplevel (verified directly) -- this step and every
+      # one below it deliberately does NOT set working-directory:
+      # nrc-social-agent, unlike the steps above.
+      - name: Generate nrc-social-agent subtree commit
+        id: subtree
+        run: |
+          set -euo pipefail
+          commit="$(git subtree split --prefix=nrc-social-agent)"
+          if [ -z "$commit" ]; then
+            echo "::error::git subtree split produced no commit -- nrc-social-agent/ may have no commit history yet in this repository. See nrc-social-agent/docs/DEPLOYMENT.md."
+            exit 1
+          fi
+          echo "Generated subtree commit: $commit"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Validate subtree contents
+        run: |
+          set -euo pipefail
+          commit="${{ steps.subtree.outputs.commit }}"
+          entries="$(git ls-tree --name-only "$commit")"
+          echo "Subtree root contains:"
+          echo "$entries"
+
+          for required in Dockerfile requirements.txt src; do
+            if ! echo "$entries" | grep -qx "$required"; then
+              echo "::error::Subtree commit is missing required entry '$required' at its root -- JustRunMy.App would not be able to build this deployment."
+              exit 1
+            fi
+          done
+
+          for forbidden in "NRC Website" nrc-ai-agents nrc-social-agent; do
+            if echo "$entries" | grep -qx "$forbidden"; then
+              echo "::error::Subtree commit unexpectedly contains '$forbidden' at its root -- the monorepo split is nested incorrectly."
+              exit 1
+            fi
+          done
+
+          echo "Subtree layout confirmed: application files at root, no unrelated monorepo directories present."
+
+      - name: Determine dry-run mode
+        id: dryrun
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "==> DRY RUN: tests, Docker build, and subtree-split validation only. No Git deployment will be made."
+            echo "value=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "==> REAL DEPLOYMENT: the subtree commit will be pushed to JustRunMy.App's deploy remote."
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate deployment secret is configured
+        if: steps.dryrun.outputs.value == 'false'
+        run: |
+          if [ -z "${{ secrets.JUSTRUNMYAPP_GIT_URL }}" ]; then
+            echo "::error::Missing required repository secret: JUSTRUNMYAPP_GIT_URL. See nrc-social-agent/docs/DEPLOYMENT.md."
+            exit 1
+          fi
+          echo "Deployment secret is present."
+
+      # A short-lived remote, added and removed within this single job
+      # run only -- never a permanent addition to the repository's own
+      # git config. Cleanup runs via `trap ... EXIT`, so the remote is
+      # removed whether the push succeeds, fails, or this step is
+      # interrupted -- never left configured either way.
+      #
+      # JUSTRUNMYAPP_GIT_URL is a single secret holding the complete,
+      # already-valid deploy remote URL (credentials included) --
+      # deliberately not split into separate username/password secrets
+      # concatenated into a URL here, because that would require this
+      # workflow to URL-encode either value itself to stay safe against
+      # a password containing a character like `@` or `:` that's special
+      # inside a URL's userinfo section; a single pre-built secret has no
+      # such risk, since nothing here parses or reconstructs it. It is
+      # never echoed or logged; GitHub Actions also masks the secret's
+      # value wherever it would otherwise appear in the log, and shell
+      # tracing (`set -x`) is deliberately never enabled for this step.
+      - name: Deploy to JustRunMy.App (git push)
+        if: steps.dryrun.outputs.value == 'false'
+        run: |
+          set -euo pipefail
+          trap 'git remote remove justrunmyapp 2>/dev/null || true' EXIT
+          git remote add justrunmyapp "${{ secrets.JUSTRUNMYAPP_GIT_URL }}"
+          # A fully-qualified destination ref is required: git rejects a
+          # bare "deploy" destination when the source is a raw commit SHA
+          # rather than an existing local branch (verified directly).
+          git push justrunmyapp "${{ steps.subtree.outputs.commit }}:refs/heads/deploy"
+
+      # Only reached if every step above succeeded -- GitHub Actions skips
+      # remaining steps by default after any failure, so this never claims
+      # success on a failed run. Runtime health (Telegram connectivity, S3
+      # connectivity, Instagram diagnostics) is intentionally not checked
+      # here -- that is operational validation, not deployment, and is
+      # covered separately by nrc-social-agent/docs/DEPLOYMENT.md /
+      # nrc-social-agent/docs/INSTAGRAM_LIVE_VALIDATION.md.
+      - name: Deployment summary
+        run: |
+          {
+            echo "### NRC Social Agent deployment"
+            echo ""
+            echo "- Tests: passed"
+            echo "- Docker build: passed"
+            echo "- Subtree split (nrc-social-agent/ only): \`${{ steps.subtree.outputs.commit }}\`, layout validated"
+            if [ "${{ steps.dryrun.outputs.value }}" = "true" ]; then
+              echo "- Deployment: skipped (dry run)"
+            else
+              echo "- Deployment: initiated and completed (subtree commit pushed to JustRunMy.App's \`deploy\` branch)"
+            fi
+            echo ""
+            echo "Runtime health was not checked by this workflow -- see nrc-social-agent/docs/DEPLOYMENT.md and nrc-social-agent/docs/INSTAGRAM_LIVE_VALIDATION.md for operational validation."
+          } >> "$GITHUB_STEP_SUMMARY"
