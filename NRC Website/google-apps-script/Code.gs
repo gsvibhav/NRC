@@ -375,7 +375,7 @@ function buildCustomerPlainText(data) {
     '',
     'Website: https://nrculture.com/',
     'Instagram: https://www.instagram.com/nextreachculture/',
-    'WhatsApp: https://wa.me/919347209987',
+    'WhatsApp: https://wa.me/919701742244',
     '',
     'Content that connects. Culture that converts.',
     '',
@@ -427,7 +427,7 @@ function buildCustomerHtml(data) {
       '<tr><td style="padding:8px 40px 0 40px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:2;">' +
         '<a href="https://nrculture.com/" style="color:#B89780;text-decoration:none;">Website</a><br>' +
         '<a href="https://www.instagram.com/nextreachculture/" style="color:#B89780;text-decoration:none;">Instagram</a><br>' +
-        '<a href="https://wa.me/919347209987" style="color:#B89780;text-decoration:none;">WhatsApp</a>' +
+        '<a href="https://wa.me/919701742244" style="color:#B89780;text-decoration:none;">WhatsApp</a>' +
       '</td></tr>' +
 
       '<tr><td style="padding:32px 40px 0 40px;"><div style="border-top:1px solid #EDE7DB;"></div></td></tr>' +
